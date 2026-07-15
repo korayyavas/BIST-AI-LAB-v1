@@ -1,0 +1,25 @@
+# Core
+pandas>=2.3.0
+numpy>=2.3.0
+
+# Machine Learning
+scikit-learn>=1.7.0
+xgboost>=3.0.0
+joblib>=1.5.0
+
+# Data
+yfinance>=0.2.65
+
+# Dashboard
+streamlit>=1.48.0
+plotly>=6.3.0
+
+# API
+fastapi>=0.116.0
+uvicorn>=0.35.0
+
+# HTTP
+requests>=2.32.0
+
+# Utilities
+python-dateutil>=2.9.0
