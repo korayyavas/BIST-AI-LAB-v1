@@ -1,6 +1,6 @@
 """
-AI Trading Dashboard
-BIST AI LAB v3
+Dashboard v4
+BIST AI LAB v4
 """
 
 from __future__ import annotations
@@ -8,162 +8,55 @@ from __future__ import annotations
 import streamlit as st
 
 from config.settings import TICKERS
-from services.screener_service import ScreenerService
-from dashboard.charts import DashboardCharts
+from data.yahoo_provider import YahooFinanceProvider
+from pipeline.feature_pipeline import FeaturePipeline
+from services.prediction_service_v4 import PredictionServiceV4
 
 
 st.set_page_config(
-
-    page_title="BIST AI LAB",
-
-    page_icon="📈",
-
+    page_title="BIST AI LAB v4",
     layout="wide",
-
 )
 
-service = ScreenerService()
+st.title("BIST AI LAB v4 - Classification")
 
-charts = DashboardCharts()
+provider = YahooFinanceProvider()
+pipeline = FeaturePipeline()
+service = PredictionServiceV4()
 
-# ==================================================
-
-st.sidebar.title("🤖 BIST AI LAB")
-
-tickers = st.sidebar.multiselect(
-
-    "Hisseler",
-
+ticker = st.selectbox(
+    "Ticker",
     TICKERS,
-
-    default=TICKERS,
-
 )
 
-run = st.sidebar.button(
+if st.button("Predict"):
 
-    "🚀 AI Screener",
+    df = provider.download(ticker)
+    df = pipeline.transform(df)
 
-    use_container_width=True,
+    features = pipeline.latest_features(df)
 
-)
-
-# ==================================================
-
-st.title("📈 AI Trading Dashboard")
-
-st.caption("BIST AI LAB v3")
-
-# ==================================================
-
-if run:
-
-    with st.spinner("Scanning..."):
-
-        df = service.scan(tickers)
-
-    if df.empty:
-
-        st.warning("Sonuç bulunamadı.")
-
-        st.stop()
-
-    # ==============================================
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Hisse",
-        len(df),
+    result = service.predict(
+        current_price=float(df.iloc[-1]["Close"]),
+        atr=float(df.iloc[-1]["ATR"]),
+        features=features,
     )
 
-    c2.metric(
-        "BUY",
-        len(df[df["Signal"].str.contains("BUY")]),
-    )
+    c1, c2, c3 = st.columns(3)
 
-    c3.metric(
-        "SELL",
-        len(df[df["Signal"].str.contains("SELL")]),
-    )
+    c1.metric("Signal", result["signal"])
+    c2.metric("Confidence", f'{result["confidence"]:.2f}%')
+    c3.metric("Stop Loss", result["stop_loss"])
 
-    c4.metric(
-        "En İyi Getiri",
-        f"{df.iloc[0]['Return %']:.2f} %",
-    )
+    st.subheader("Probabilities")
 
-    st.divider()
+    st.progress(result["buy_probability"] / 100)
+    st.write(f'BUY : {result["buy_probability"]:.2f}%')
 
-    st.dataframe(
+    st.progress(result["hold_probability"] / 100)
+    st.write(f'HOLD : {result["hold_probability"]:.2f}%')
 
-        df,
+    st.progress(result["sell_probability"] / 100)
+    st.write(f'SELL : {result["sell_probability"]:.2f}%')
 
-        use_container_width=True,
-
-        hide_index=True,
-
-    )
-
-    st.divider()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.plotly_chart(
-
-            charts.return_chart(df),
-
-            use_container_width=True,
-
-        )
-
-    with col2:
-
-        st.plotly_chart(
-
-            charts.confidence_chart(df),
-
-            use_container_width=True,
-
-        )
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-
-        st.plotly_chart(
-
-            charts.risk_chart(df),
-
-            use_container_width=True,
-
-        )
-
-    with col4:
-
-        st.plotly_chart(
-
-            charts.rr_chart(df),
-
-            use_container_width=True,
-
-        )
-
-    st.divider()
-
-    st.subheader("🏆 Top 5")
-
-    st.dataframe(
-
-        df.head(5),
-
-        use_container_width=True,
-
-        hide_index=True,
-
-    )
-
-else:
-
-    st.info("Soldan hisseleri seçip AI Screener'i çalıştırın.")
+    st.json(result)

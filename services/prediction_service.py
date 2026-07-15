@@ -1,23 +1,22 @@
 """
-Prediction Service
-BIST AI LAB v3
+Prediction Service v4
+BIST AI LAB v4
 """
 
 from __future__ import annotations
 
-from core.predictor import Predictor
-from core.signal_engine import SignalEngine
 from core.risk_engine import RiskEngine
+from core.signal_engine import SignalEngineV4
+from models.classification_trainer import ClassificationTrainer
+from pipeline.target_generator import TargetGenerator
 
 
-class PredictionService:
+class PredictionServiceV4:
 
     def __init__(self):
 
-        self.predictor = Predictor()
-
-        self.signal_engine = SignalEngine()
-
+        self.trainer = ClassificationTrainer().load()
+        self.signal_engine = SignalEngineV4()
         self.risk_engine = RiskEngine()
 
     # ==================================================
@@ -29,68 +28,27 @@ class PredictionService:
         atr: float,
     ) -> dict:
 
-        expected_return = self.predictor.predict_one(
-            features
-        )
+        probabilities = self.trainer.predict_proba(features)[0]
 
-        signal = self.signal_engine.generate(
-            expected_return
+        signal = TargetGenerator.probabilities_to_signal(
+            probabilities
         )
 
         risk = self.risk_engine.calculate(
-
             current_price=current_price,
-
-            expected_return=expected_return,
-
+            expected_return=0.0,
             atr=atr,
-
-            confidence=signal["score"],
-
+            confidence=int(signal["confidence"]),
         )
 
         return {
-
-            "current_price": round(
-                current_price,
-                2,
-            ),
-
-            "expected_return": round(
-                expected_return * 100,
-                2,
-            ),
-
-            "target_price": risk[
-                "target_price"
-            ],
-
-            "signal": signal[
-                "signal"
-            ],
-
-            "confidence": signal[
-                "score"
-            ],
-
-            "risk_score": risk[
-                "risk_score"
-            ],
-
-            "position_size": risk[
-                "position_size"
-            ],
-
-            "stop_loss": risk[
-                "stop_loss"
-            ],
-
-            "risk_reward": risk[
-                "risk_reward"
-            ],
-
-            "volatility": risk[
-                "volatility"
-            ],
-
+            "current_price": round(current_price, 2),
+            "signal": signal["signal"],
+            "confidence": signal["confidence"],
+            "buy_probability": signal["buy_probability"],
+            "hold_probability": signal["hold_probability"],
+            "sell_probability": signal["sell_probability"],
+            "risk_score": risk["risk_score"],
+            "position_size": risk["position_size"],
+            "stop_loss": risk["stop_loss"],
         }

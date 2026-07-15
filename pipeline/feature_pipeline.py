@@ -1,6 +1,7 @@
+
 """
 Feature Pipeline
-BIST AI LAB v3
+BIST AI LAB v3.1
 """
 
 from __future__ import annotations
@@ -13,282 +14,104 @@ from indicators.technical_indicators import TechnicalIndicators
 
 class FeaturePipeline:
 
-    def __init__(
-        self,
-        prediction_days: int = 5,
-    ):
+    def __init__(self, prediction_days: int = 5):
 
         self.prediction_days = prediction_days
-
         self.indicators = TechnicalIndicators()
 
-    # ==================================================
-    # MAIN
-    # ==================================================
-
-    def transform(
-        self,
-        df: pd.DataFrame,
-    ) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
 
         df = df.copy()
 
-        # Technical Indicators
         df = self.indicators.transform(df)
 
-        # Returns
         self._returns(df)
-
-        # Lag Features
         self._lags(df)
-
-        # Trend
         self._trend(df)
-
-        # Volatility
         self._volatility(df)
-
-        # Volume
         self._volume(df)
-
-        # Price Action
-        self._price_action(df)
-
-        # Target
+        self._price(df)
+        self._rolling(df)
+        self._levels(df)
         self._target(df)
 
-        # Clean
-        df = self._clean(df)
+        return self._clean(df)
 
-        return df
+    def split_xy(self, df: pd.DataFrame):
 
-    # ==================================================
-
-    def split_xy(
-        self,
-        df: pd.DataFrame,
-    ):
-
-        drop_columns = [
-            "TARGET",
-            "Date",
-        ]
-
-        existing = [
-            c
-            for c in drop_columns
-            if c in df.columns
-        ]
-
-        X = df.drop(
-            columns=existing,
-        )
-
-        X = X.select_dtypes(
-            include=["number"]
-        )
-
+        X = df.drop(columns=["TARGET"], errors="ignore")
+        X = X.select_dtypes(include=["number"])
         y = df["TARGET"]
 
         return X, y
 
-    # ==================================================
-
-    def latest_features(
-        self,
-        df: pd.DataFrame,
-    ):
+    def latest_features(self, df: pd.DataFrame):
 
         X, _ = self.split_xy(df)
-
         return X.tail(1)
 
-    # ==================================================
-    # RETURNS
-    # ==================================================
+    def _returns(self, df):
 
-    def _returns(
-        self,
-        df,
-    ):
+        for w in [1,3,5,10,20]:
+            df[f"RETURN_{w}"] = df["Close"].pct_change(w)
 
-        for window in [1, 3, 5, 10, 20]:
+    def _lags(self, df):
 
-            df[f"RETURN_{window}"] = (
-                df["Close"].pct_change(window)
-            )
+        for lag in [1,2,3,5,10]:
+            df[f"RETURN_LAG_{lag}"] = df["RETURN_1"].shift(lag)
+            df[f"VOLUME_LAG_{lag}"] = df["Volume"].pct_change().shift(lag)
 
-    # ==================================================
-    # LAGS
-    # ==================================================
+    def _trend(self, df):
 
-    def _lags(
-        self,
-        df,
-    ):
+        for w in [10,20,50]:
+            df[f"SMA_{w}"] = df["Close"].rolling(w).mean()
+            df[f"EMA_{w}"] = df["Close"].ewm(span=w, adjust=False).mean()
 
-        for lag in [1, 2, 3, 5, 10, 20]:
+        df["EMA_RATIO"] = df["EMA_20"] / df["EMA_50"]
+        df["PRICE_EMA20"] = (df["Close"]-df["EMA_20"]) / df["EMA_20"]
+        df["PRICE_EMA50"] = (df["Close"]-df["EMA_50"]) / df["EMA_50"]
 
-            df[f"CLOSE_LAG_{lag}"] = (
-                df["Close"].shift(lag)
-            )
+    def _volatility(self, df):
 
-            df[f"VOLUME_LAG_{lag}"] = (
-                df["Volume"].shift(lag)
-            )
+        for w in [5,10,20]:
+            df[f"VOL_{w}"] = df["RETURN_1"].rolling(w).std()
 
-    # ==================================================
-    # TREND
-    # ==================================================
+        if "ATR" in df.columns:
+            df["ATR_PERCENT"] = df["ATR"] / df["Close"]
 
-    def _trend(
-        self,
-        df,
-    ):
+    def _volume(self, df):
 
-        df["SMA20"] = (
-            df["Close"]
-            .rolling(20)
-            .mean()
-        )
+        df["VOL_MA20"] = df["Volume"].rolling(20).mean()
+        df["VOL_RATIO"] = df["Volume"] / df["VOL_MA20"]
+        df["VOL_CHANGE"] = df["Volume"].pct_change()
 
-        df["SMA50"] = (
-            df["Close"]
-            .rolling(50)
-            .mean()
-        )
+    def _price(self, df):
 
-        df["EMA20"] = (
-            df["Close"]
-            .ewm(span=20)
-            .mean()
-        )
+        df["BODY"] = df["Close"] - df["Open"]
+        df["RANGE"] = df["High"] - df["Low"]
+        df["BODY_RATIO"] = df["BODY"] / df["RANGE"]
 
-        df["EMA50"] = (
-            df["Close"]
-            .ewm(span=50)
-            .mean()
-        )
+    def _rolling(self, df):
 
-        df["EMA_RATIO"] = (
-            df["EMA20"]
-            / df["EMA50"]
-        )
+        for w in [5,10,20]:
+            df[f"ROLL_MEAN_{w}"] = df["Close"].rolling(w).mean()
+            df[f"ROLL_STD_{w}"] = df["Close"].rolling(w).std()
 
-        df["EMA20_DISTANCE"] = (
-            (df["Close"] - df["EMA20"])
-            / df["EMA20"]
-        )
+    def _levels(self, df):
 
-        df["EMA50_DISTANCE"] = (
-            (df["Close"] - df["EMA50"])
-            / df["EMA50"]
-        )
+        df["HIGH_252"] = df["High"].rolling(252).max()
+        df["LOW_252"] = df["Low"].rolling(252).min()
 
-    # ==================================================
-    # VOLATILITY
-    # ==================================================
+        df["DIST_HIGH"] = (df["HIGH_252"]-df["Close"]) / df["HIGH_252"]
+        df["DIST_LOW"] = (df["Close"]-df["LOW_252"]) / df["LOW_252"]
 
-    def _volatility(
-        self,
-        df,
-    ):
+    def _target(self, df):
 
-        for window in [5, 10, 20]:
+        future = df["Close"].shift(-self.prediction_days)
+        df["TARGET"] = future / df["Close"] - 1
 
-            df[f"VOLATILITY_{window}"] = (
-                df["RETURN_1"]
-                .rolling(window)
-                .std()
-            )
+    def _clean(self, df):
 
-    # ==================================================
-    # VOLUME
-    # ==================================================
-
-    def _volume(
-        self,
-        df,
-    ):
-
-        df["VOLUME_CHANGE"] = (
-            df["Volume"]
-            .pct_change()
-        )
-
-        df["VOLUME_MA20"] = (
-            df["Volume"]
-            .rolling(20)
-            .mean()
-        )
-
-        df["VOLUME_RATIO"] = (
-            df["Volume"]
-            / df["VOLUME_MA20"]
-        )
-
-    # ==================================================
-    # PRICE ACTION
-    # ==================================================
-
-    def _price_action(
-        self,
-        df,
-    ):
-
-        df["BODY"] = (
-            df["Close"]
-            - df["Open"]
-        )
-
-        df["RANGE"] = (
-            df["High"]
-            - df["Low"]
-        )
-
-        df["BODY_RATIO"] = (
-            df["BODY"]
-            / df["RANGE"]
-        )
-
-    # ==================================================
-    # TARGET
-    # ==================================================
-
-    def _target(
-        self,
-        df,
-    ):
-
-        future_close = (
-            df["Close"]
-            .shift(-self.prediction_days)
-        )
-
-        df["TARGET"] = (
-            future_close
-            / df["Close"]
-            - 1
-        )
-
-    # ==================================================
-    # CLEAN
-    # ==================================================
-
-    def _clean(
-        self,
-        df,
-    ):
-
-        df = df.replace(
-            [np.inf, -np.inf],
-            np.nan,
-        )
-
+        df = df.replace([np.inf,-np.inf], np.nan)
         df = df.dropna()
-
-        df = df.reset_index(
-            drop=True
-        )
-
-        return df
+        return df.reset_index(drop=True)

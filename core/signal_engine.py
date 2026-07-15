@@ -1,84 +1,41 @@
 """
-Signal Engine
-BIST AI LAB v3
+Signal Engine v4
+BIST AI LAB v4
 """
 
 from __future__ import annotations
 
-from config.settings import (
-    BUY_THRESHOLD,
-    SELL_THRESHOLD,
-    STRONG_BUY,
-    STRONG_SELL,
-)
 
-
-class SignalEngine:
-
-    # ==================================================
+class SignalEngineV4:
 
     def generate(
         self,
-        expected_return: float,
+        buy_probability: float,
+        hold_probability: float,
+        sell_probability: float,
     ) -> dict:
 
-        signal = self._signal(
-            expected_return
-        )
-
-        score = self._confidence(
-            expected_return
-        )
-
-        return {
-
-            "signal": signal,
-
-            "score": score,
-
+        probs = {
+            "BUY": buy_probability,
+            "HOLD": hold_probability,
+            "SELL": sell_probability,
         }
 
-    # ==================================================
+        signal = max(probs, key=probs.get)
+        confidence = round(probs[signal] * 100, 2)
 
-    def _signal(
-        self,
-        expected_return: float,
-    ) -> str:
+        return {
+            "signal": signal,
+            "confidence": confidence,
+            "buy_probability": round(buy_probability * 100, 2),
+            "hold_probability": round(hold_probability * 100, 2),
+            "sell_probability": round(sell_probability * 100, 2),
+        }
 
-        if expected_return >= STRONG_BUY:
-            return "STRONG BUY"
+    def from_proba(self, probabilities):
 
-        if expected_return >= BUY_THRESHOLD:
-            return "BUY"
-
-        if expected_return <= STRONG_SELL:
-            return "STRONG SELL"
-
-        if expected_return <= SELL_THRESHOLD:
-            return "SELL"
-
-        return "HOLD"
-
-    # ==================================================
-
-    def _confidence(
-        self,
-        expected_return: float,
-    ) -> int:
-
-        value = abs(expected_return)
-
-        if value >= abs(STRONG_BUY):
-            return 100
-
-        score = int(
-            50 + value * 800
-        )
-
-        return max(
-            50,
-            min(
-                100,
-                score,
-            ),
+        return self.generate(
+            probabilities[2],
+            probabilities[1],
+            probabilities[0],
         )
