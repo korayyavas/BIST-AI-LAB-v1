@@ -83,3 +83,5 @@ REPORT_PATH = "reports"
 LOG_PATH = "logs"
 
 MODEL_FILE = "xgboost_model.joblib"
+
+CLASSIFIER_FILE = "classifier.joblib"

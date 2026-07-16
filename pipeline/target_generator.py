@@ -13,13 +13,9 @@ class TargetGenerator:
     def __init__(
         self,
         prediction_days: int = 5,
-        up_threshold: float = 0.02,
-        down_threshold: float = -0.02,
     ):
 
         self.prediction_days = prediction_days
-        self.up_threshold = up_threshold
-        self.down_threshold = down_threshold
 
     # ==================================================
 
@@ -31,59 +27,105 @@ class TargetGenerator:
         df = df.copy()
 
         future_return = (
+
             df["Close"]
+
             .shift(-self.prediction_days)
+
             .div(df["Close"])
-            .sub(1.0)
+
+            .sub(1)
+
         )
 
         df["FUTURE_RETURN"] = future_return
 
+        q1 = future_return.quantile(0.33)
+
+        q2 = future_return.quantile(0.66)
+
         df["TARGET"] = 1
 
         df.loc[
-            future_return >= self.up_threshold,
-            "TARGET",
-        ] = 2
-
-        df.loc[
-            future_return <= self.down_threshold,
+            future_return <= q1,
             "TARGET",
         ] = 0
 
-        return df.dropna().reset_index(drop=True)
+        df.loc[
+            future_return >= q2,
+            "TARGET",
+        ] = 2
+
+        return (
+
+            df
+
+            .dropna()
+
+            .reset_index(drop=True)
+
+        )
 
     # ==================================================
 
     @staticmethod
-    def label_name(label: int) -> str:
+    def label_name(
+        label: int,
+    ):
 
-        mapping = {
+        labels = {
+
             0: "SELL",
+
             1: "HOLD",
+
             2: "BUY",
+
         }
 
-        return mapping.get(label, "UNKNOWN")
+        return labels[label]
 
     # ==================================================
 
     @staticmethod
     def probabilities_to_signal(
         probabilities,
-    ) -> dict:
+    ):
 
-        labels = ["SELL", "HOLD", "BUY"]
+        labels = [
 
-        idx = int(probabilities.argmax())
+            "SELL",
+
+            "HOLD",
+
+            "BUY",
+
+        ]
+
+        idx = probabilities.argmax()
 
         return {
+
             "signal": labels[idx],
+
             "confidence": round(
                 float(probabilities[idx]) * 100,
                 2,
             ),
-            "sell_probability": round(float(probabilities[0]) * 100, 2),
-            "hold_probability": round(float(probabilities[1]) * 100, 2),
-            "buy_probability": round(float(probabilities[2]) * 100, 2),
+
+            "sell_probability": round(
+                float(probabilities[0]) * 100,
+                2,
+            ),
+
+            "hold_probability": round(
+                float(probabilities[1]) * 100,
+                2,
+            ),
+
+            "buy_probability": round(
+                float(probabilities[2]) * 100,
+                2,
+            ),
+
         }

@@ -1,54 +1,67 @@
+
 """
-Prediction Service v4
-BIST AI LAB v4
+Prediction Service
+BIST AI LAB v6
+Backward-compatible and auto-loads trained model.
 """
 
 from __future__ import annotations
 
-from core.risk_engine import RiskEngine
-from core.signal_engine import SignalEngineV4
 from models.classification_trainer import ClassificationTrainer
-from pipeline.target_generator import TargetGenerator
+from core.signal_engine import SignalEngine
 
 
-class PredictionServiceV4:
+class PredictionService:
 
     def __init__(self):
+        self.trainer = ClassificationTrainer()
+        try:
+            self.trainer.load()
+        except Exception as exc:
+            raise RuntimeError(
+                "Classifier model could not be loaded. "
+                "Run 'py -m tests.test_classifier_training' first."
+            ) from exc
 
-        self.trainer = ClassificationTrainer().load()
-        self.signal_engine = SignalEngineV4()
-        self.risk_engine = RiskEngine()
-
-    # ==================================================
+        self.engine = SignalEngine()
 
     def predict(
         self,
-        current_price: float,
-        features,
-        atr: float,
-    ) -> dict:
+        df=None,
+        features=None,
+        atr=None,
+        current_price=None,
+        **kwargs,
+    ):
+        if features is None:
+            raise ValueError("features is required")
 
         probabilities = self.trainer.predict_proba(features)[0]
 
-        signal = TargetGenerator.probabilities_to_signal(
-            probabilities
-        )
+        if current_price is None:
+            if df is None:
+                raise ValueError("Either df or current_price must be provided")
 
-        risk = self.risk_engine.calculate(
-            current_price=current_price,
-            expected_return=0.0,
+            if "Close" in df.columns:
+                current_price = float(df["Close"].iloc[0])
+            elif "Adj Close" in df.columns:
+                current_price = float(df["Adj Close"].iloc[0])
+            else:
+                raise ValueError("Close price column not found")
+
+        atr = 0.0 if atr is None else float(atr)
+
+        result = self.engine.generate(
+            probabilities=probabilities,
+            current_price=float(current_price),
             atr=atr,
-            confidence=int(signal["confidence"]),
         )
 
-        return {
-            "current_price": round(current_price, 2),
-            "signal": signal["signal"],
-            "confidence": signal["confidence"],
-            "buy_probability": signal["buy_probability"],
-            "hold_probability": signal["hold_probability"],
-            "sell_probability": signal["sell_probability"],
-            "risk_score": risk["risk_score"],
-            "position_size": risk["position_size"],
-            "stop_loss": risk["stop_loss"],
-        }
+        for key, value in list(result.items()):
+            try:
+                if hasattr(value, "item"):
+                    result[key] = value.item()
+            except Exception:
+                pass
+
+        return result

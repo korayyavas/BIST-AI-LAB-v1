@@ -1,46 +1,63 @@
 """
 Backtest Test
-BIST AI LAB v3
+PredictionService uyumlu sürüm
 """
 
-from config.settings import TICKERS
+from data.yahoo_provider import YahooFinanceProvider
+from pipeline.feature_pipeline import FeaturePipeline
+from pipeline.target_generator import TargetGenerator
 
-from services.screener_service import ScreenerService
+from services.prediction_service import PredictionService
 
-from backtest.strategy import Strategy
-from backtest.backtester import Backtester
-from backtest.report import BacktestReport
+from backtest.backtest_engine import BacktestEngine
+from backtest.performance_metrics import PerformanceMetrics
 
 
 def main():
 
-    screener = ScreenerService()
+    print("BACKTEST TEST")
 
-    strategy = Strategy()
+    provider=YahooFinanceProvider()
+    pipeline=FeaturePipeline()
+    target=TargetGenerator()
+    predictor=PredictionService()
 
-    backtester = Backtester()
+    df=provider.download("ASELS.IS")
+    df=pipeline.transform(df)
+    df=target.transform(df)
 
-    report = BacktestReport()
+    features=df.select_dtypes(include=["number"]).drop(
+        columns=["TARGET","FUTURE_RETURN"],
+        errors="ignore",
+    )
 
-    print("Backtest çalışıyor...\n")
+    signals=[]
 
-    df = screener.scan(TICKERS)
+    for i in range(len(df)):
+        row=df.iloc[[i]]
+        feat=features.iloc[[i]]
+        atr=float(row["ATR"].iloc[0]) if "ATR" in row.columns else 0.0
 
-    df = strategy.generate(df)
+        result=predictor.predict(
+            row,
+            feat,
+            atr,
+        )
+        signals.append(result["signal"])
 
-    trades = strategy.trades(df)
+    df["SIGNAL"]=signals
 
-    metrics = backtester.run(trades)
+    engine=BacktestEngine()
+    result=engine.run(df)
 
-    report.print(metrics)
+    metrics=PerformanceMetrics.calculate(result["EQUITY"])
 
-    print()
-
-    print(report.summary(metrics))
+    print("\nBACKTEST RESULTS\n")
+    for k,v in metrics.items():
+        print(f"{k:20}: {v}")
 
     print("\nTEST BAŞARILI")
 
 
-if __name__ == "__main__":
-
+if __name__=="__main__":
     main()

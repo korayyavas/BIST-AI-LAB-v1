@@ -4,8 +4,10 @@ BIST AI LAB v4
 """
 
 from data.yahoo_provider import YahooFinanceProvider
+
 from pipeline.feature_pipeline import FeaturePipeline
-from services.prediction_service import PredictionServiceV4
+
+from services.prediction_service import PredictionService
 
 
 def main():
@@ -14,7 +16,7 @@ def main():
 
     pipeline = FeaturePipeline()
 
-    service = PredictionServiceV4()
+    service = PredictionService()
 
     print("ASELS verisi indiriliyor...")
 
@@ -26,9 +28,13 @@ def main():
 
     result = service.predict(
 
-        current_price=float(df.iloc[-1]["Close"]),
+        current_price=float(
+            df.iloc[-1]["Close"]
+        ),
 
-        atr=float(df.iloc[-1]["ATR"]),
+        atr=float(
+            df.iloc[-1]["ATR"]
+        ),
 
         features=X,
 
