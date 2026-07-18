@@ -57,6 +57,35 @@ class PredictionService:
             atr=atr,
         )
 
+        buy = float(result.get("buy_probability", 0))
+        conf = float(result.get("confidence", 0))
+        risk = float(result.get("risk_score", 100))
+
+        top_score = (
+            0.50 * buy +
+            0.30 * conf +
+            0.20 * (100 - risk)
+        )
+
+        if top_score >= 60:
+            position_size = 0.10
+        elif top_score >= 50:
+            position_size = 0.08
+        elif top_score >= 40:
+            position_size = 0.05
+        elif top_score >= 30:
+            position_size = 0.03
+        else:
+            position_size = 0.02
+
+        if risk >= 70:
+            position_size *= 0.50
+        elif risk >= 50:
+            position_size *= 0.75
+
+        result["top_score"] = round(top_score, 2)
+        result["position_size"] = round(position_size, 2)
+
         for key, value in list(result.items()):
             try:
                 if hasattr(value, "item"):
