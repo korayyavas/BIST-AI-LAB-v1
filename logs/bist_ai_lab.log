@@ -22,3 +22,26 @@
 2026-07-16 16:03:04,708 | INFO | httpx | HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
 2026-07-16 16:03:04,714 | INFO | httpx | HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
 2026-07-16 16:03:04,721 | INFO | httpx | HTTP Request: GET http://testserver/system "HTTP/1.1 200 OK"
+2026-07-16 16:36:14,523 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:55:30,026 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:56:04,973 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:58:10,335 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:58:11,572 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:58:33,531 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:58:57,886 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 16:59:57,533 | ERROR | yfinance | Failed to get ticker 'STRING' reason: Failed to perform, curl: (28) Connection timed out after 30004 milliseconds. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-07-16 17:00:27,592 | ERROR | yfinance | 
+1 Failed download:
+2026-07-16 17:00:27,593 | ERROR | yfinance | ['STRING']: Timeout('Failed to perform, curl: (28) Connection timed out after 30013 milliseconds. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.')
+2026-07-16 17:01:20,659 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-16 17:01:20,701 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:30:21,259 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:30:31,046 | INFO | httpx | HTTP Request: POST http://testserver/predict "HTTP/1.1 422 Unprocessable Entity"
+2026-07-18 21:35:50,182 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:35:56,185 | INFO | httpx | HTTP Request: POST http://testserver/predict "HTTP/1.1 200 OK"
+2026-07-18 21:40:52,409 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:40:59,133 | INFO | httpx | HTTP Request: POST http://testserver/scan "HTTP/1.1 200 OK"
+2026-07-18 21:51:33,480 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:51:33,745 | INFO | httpx | HTTP Request: POST http://testserver/top-picks "HTTP/1.1 404 Not Found"
+2026-07-18 21:52:56,866 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
+2026-07-18 21:53:03,251 | INFO | BIST_AI_LAB | BIST AI LAB 6.0.0 (Development)
