@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Ollama cache (opsiyonel)
+.cache/
+
+# IDE
+.vscode/
+.idea/

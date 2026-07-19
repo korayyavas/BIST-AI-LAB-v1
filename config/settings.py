@@ -10,6 +10,13 @@ PROJECT_NAME = "BIST AI LAB"
 
 VERSION = "3.0.0"
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+
 # ==========================================
 # DATA
 # ==========================================
@@ -85,3 +92,17 @@ LOG_PATH = "logs"
 MODEL_FILE = "xgboost_model.joblib"
 
 CLASSIFIER_FILE = "classifier.joblib"
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

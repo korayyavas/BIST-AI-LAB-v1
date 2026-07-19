@@ -6,6 +6,8 @@ BIST AI LAB v6.1
 
 from __future__ import annotations
 
+from api.intelligence_models import IntelligenceRequest
+from services.intelligence_service import IntelligenceService
 from fastapi import FastAPI
 
 from core.startup import Startup
@@ -30,6 +32,7 @@ app = FastAPI(
 )
 
 controller = PredictionController()
+intelligence_controller = IntelligenceService()
 scan_controller = ScanController()
 top_picks_controller = TopPicksController()
 
@@ -85,3 +88,6 @@ def top_picks(req: TopPicksRequest):
         )
     }
 
+@app.post("/intelligence")
+def intelligence(req: IntelligenceRequest):
+    return intelligence_controller.analyze(req.symbol)
