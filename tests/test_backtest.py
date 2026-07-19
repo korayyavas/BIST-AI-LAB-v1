@@ -49,6 +49,10 @@ def main():
 
     engine=BacktestEngine()
     result=engine.run(df)
+    print(type(result["EQUITY"]))
+    print(result["EQUITY"].head())
+    print(result["EQUITY"].dtypes)
+    print(result["EQUITY"].columns.tolist())
 
     metrics=PerformanceMetrics.calculate(result["EQUITY"])
 

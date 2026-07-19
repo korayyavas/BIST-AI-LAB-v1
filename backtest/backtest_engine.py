@@ -70,6 +70,10 @@ class BacktestEngine:
         self.equity_curve.save_csv()
 
         return {
+            "TRADES": trades,
+            "EQUITY": equity,
+
+             # Backward compatibility
             "trades": trades,
             "equity": equity,
         }
