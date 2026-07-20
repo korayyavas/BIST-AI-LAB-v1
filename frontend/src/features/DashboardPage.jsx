@@ -1,14 +1,22 @@
-import {
+import { useMemo } from "react";
 
+import {
+    Alert,
     Box,
     Grid,
     Stack,
-    Typography
-
+    Typography,
 } from "@mui/material";
+
+import { useDashboard } from "./dashboard/hooks";
+import {
+    DashboardProvider,
+    useDashboardContext,
+} from "./dashboard/DashboardContext";
 
 import AIScoreCard from "./dashboard/cards/AIScoreCard";
 import KPICard from "./dashboard/cards/KPICard";
+
 import RadarChart from "./dashboard/charts/RadarChart";
 import TradingChart from "./dashboard/charts/TradingChart";
 
@@ -19,93 +27,171 @@ import KapPanel from "./dashboard/panels/KapPanel";
 
 import StatusBar from "./dashboard/widgets/StatusBar";
 
-export default function DashboardPage(){
+function DashboardContent() {
 
-    return(
+    const {
+        selectedSymbol,
+    } = useDashboardContext();
 
-        <Box sx={{p:3}}>
+    const {
+        loading,
+        error,
+        data,
+    } = useDashboard(
+        selectedSymbol,
+        {
+            autoRefresh: true,
+            refreshInterval: 60000,
+        },
+    );
+
+    const intelligence = useMemo(
+        () => data?.intelligence ?? {},
+        [data],
+    );
+
+    if (error) {
+
+        return (
+            <Alert severity="error">
+                Dashboard yüklenemedi.
+            </Alert>
+        );
+
+    }
+
+    return (
+
+        <Box sx={{ p: 3 }}>
 
             <Typography
-                variant="h3"
+                variant="h4"
                 fontWeight={700}
                 mb={3}
             >
-
-                Dashboard
-
+                BIST AI LAB
             </Typography>
 
-            <Grid container spacing={2}>
+            <Grid
+                container
+                spacing={2}
+            >
 
-                <Grid item xs={2.5}>
-
-                    <PortfolioPanel/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 3,
+                    }}
+                >
+                    <PortfolioPanel />
                 </Grid>
 
-                <Grid item xs={4}>
-
-                    <AIScoreCard/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 4,
+                    }}
+                >
+                    <AIScoreCard
+                        loading={loading}
+                        data={intelligence}
+                    />
                 </Grid>
 
-                <Grid item xs={5.5}>
-
-                    <NewsPanel/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 5,
+                    }}
+                >
+                    <NewsPanel
+                        news={data.news}
+                        loading={loading}
+                    />
                 </Grid>
 
-                <Grid item xs={2.5}>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 3,
+                    }}
+                >
                     <Stack spacing={2}>
 
-                        <KPICard title="ML"/>
+                        <KPICard title="ML" />
 
-                        <KPICard title="Technical"/>
+                        <KPICard title="Technical" />
 
-                        <KPICard title="News"/>
+                        <KPICard title="News" />
 
-                        <KPICard title="Research"/>
+                        <KPICard title="Research" />
 
-                        <KPICard title="KAP"/>
+                        <KPICard title="KAP" />
 
                     </Stack>
-
                 </Grid>
 
-                <Grid item xs={4}>
-
-                    <RadarChart/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 4,
+                    }}
+                >
+                    <RadarChart />
                 </Grid>
 
-                <Grid item xs={5.5}>
-
-                    <ResearchPanel/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 5,
+                    }}
+                >
+                    <ResearchPanel
+                        reports={data.research}
+                        loading={loading}
+                    />
                 </Grid>
 
-                <Grid item xs={8}>
-
-                    <TradingChart/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 8,
+                    }}
+                >
+                    <TradingChart />
                 </Grid>
 
-                <Grid item xs={4}>
-
-                    <KapPanel/>
-
-                </Grid>
-
-                <Grid item xs={12}>
-
-                    <StatusBar/>
-
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 4,
+                    }}
+                >
+                    <KapPanel
+                        events={data.kap}
+                        loading={loading}
+                    />
                 </Grid>
 
             </Grid>
 
+            <StatusBar />
+
         </Box>
+
+    );
+
+}
+
+export default function DashboardPage() {
+
+    return (
+
+        <DashboardProvider>
+
+            <DashboardContent />
+
+        </DashboardProvider>
 
     );
 
