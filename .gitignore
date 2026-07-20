@@ -1,19 +1,17 @@
-# Python
+# Model artifacts
+models/*.joblib
+
+# Python cache
 __pycache__/
 *.pyc
-*.pyo
-
-# Environment
-.env
-.env.*
 
 # Logs
 logs/
-*.log
 
-# Ollama cache (opsiyonel)
-.cache/
+# Generated reports
+reports/*.pdf
+reports/*.csv
 
-# IDE
-.vscode/
-.idea/
+# Environment
+.env
+node_modules

@@ -1,3 +1,11 @@
+"""
+Decision Engine
+BIST AI LAB v7
+"""
+
+from __future__ import annotations
+
+
 class DecisionEngine:
 
     def evaluate(
@@ -34,16 +42,12 @@ class DecisionEngine:
 
         if final_score >= 85:
             decision = "STRONG BUY"
-
         elif final_score >= 70:
             decision = "BUY"
-
         elif final_score >= 55:
             decision = "HOLD"
-
         elif final_score >= 40:
             decision = "SELL"
-
         else:
             decision = "STRONG SELL"
 

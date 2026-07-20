@@ -1,4 +1,13 @@
+"""
+News Service
+BIST AI LAB v8
+"""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
+
+from core.cache_manager import CacheManager
 
 from data.google_news_provider import GoogleNewsProvider
 from services.sentiment_service import SentimentService
@@ -19,47 +28,100 @@ SYMBOL_MAP = {
 
 @dataclass
 class NewsResult:
+
     source: str
+
     title: str
+
     url: str
+
     sentiment: str
+
     score: float
 
 
 class NewsService:
 
     def __init__(self):
+
         self.provider = GoogleNewsProvider()
+
         self.sentiment = SentimentService()
+
+        self.cache = CacheManager()
+
+    # =====================================================
 
     def get_news(self, symbol: str):
 
-        keyword = SYMBOL_MAP.get(symbol, symbol)
+        def producer():
 
-        articles = self.provider.search(keyword)
+            keyword = SYMBOL_MAP.get(symbol, symbol)
 
-        news = []
+            articles = self.provider.search(keyword)
 
-        for article in articles:
+            news = []
 
-            title = article.get("title", "")
+            for article in articles:
 
-            analysis = self.sentiment.analyze(title)
+                title = article.get("title", "")
 
-            source = article.get("source", {})
-            if isinstance(source, dict):
-                source_name = source.get("name", "Unknown")
-            else:
-                source_name = "Unknown"
+                analysis = self.sentiment.analyze(title)
 
-            news.append(
-                NewsResult(
-                    source=source_name,
-                    title=title,
-                    url=article.get("url", ""),
-                    sentiment=analysis["sentiment"],
-                    score=analysis["score"],
+                source = article.get("source", {})
+
+                if isinstance(source, dict):
+
+                    source_name = source.get(
+                        "name",
+                        "Unknown",
+                    )
+
+                else:
+
+                    source_name = "Unknown"
+
+                news.append(
+
+                    NewsResult(
+
+                        source=source_name,
+
+                        title=title,
+
+                        url=article.get(
+                            "url",
+                            "",
+                        ),
+
+                        sentiment=analysis["sentiment"],
+
+                        score=analysis["score"],
+
+                    )
+
                 )
-            )
 
-        return news
+            return [
+
+                item.__dict__
+
+                for item in news
+
+            ]
+
+        cached = self.cache.get(
+
+            f"news_{symbol}",
+
+            producer,
+
+        )
+
+        return [
+
+            NewsResult(**item)
+
+            for item in cached
+
+        ]
