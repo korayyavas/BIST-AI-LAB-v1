@@ -1,49 +1,91 @@
-import { useEffect,useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { loadDashboard } from "./DashboardApi";
 
-export function useDashboard(symbol){
+export function useDashboard(
+    symbol,
+    options = {},
+) {
+    const {
+        autoRefresh = false,
+        refreshInterval = 60000,
+    } = options;
 
-    const [loading,setLoading]=useState(true);
+    const mountedRef = useRef(true);
 
-    const [data,setData]=useState(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(()=>{
+    const [error, setError] = useState(null);
 
-        reload();
+    const [lastUpdated, setLastUpdated] = useState(null);
 
-    },[symbol]);
+    const [data, setData] = useState({
+        intelligence: null,
+        news: [],
+        research: [],
+        kap: [],
+        errors: {},
+    });
 
-    async function reload(){
+    const reload = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-        setLoading(true);
-
-        try{
-
-            const result=
-
+            const result =
                 await loadDashboard(symbol);
+
+            if (!mountedRef.current) return;
 
             setData(result);
 
+            setLastUpdated(
+                result.loadedAt ??
+                    new Date().toISOString(),
+            );
+        } catch (err) {
+            if (!mountedRef.current) return;
+
+            console.error(err);
+
+            setError(err);
+        } finally {
+            if (mountedRef.current) {
+                setLoading(false);
+            }
         }
+    }, [symbol]);
 
-        finally{
+    useEffect(() => {
+        mountedRef.current = true;
 
-            setLoading(false);
+        reload();
 
-        }
+        return () => {
+            mountedRef.current = false;
+        };
+    }, [reload]);
 
-    }
+    useEffect(() => {
+        if (!autoRefresh) return;
 
-    return{
+        const timer = setInterval(
+            reload,
+            refreshInterval,
+        );
 
+        return () => clearInterval(timer);
+    }, [
+        autoRefresh,
+        refreshInterval,
+        reload,
+    ]);
+
+    return {
         loading,
-
+        error,
         data,
-
-        reload
-
+        reload,
+        lastUpdated,
     };
-
 }
