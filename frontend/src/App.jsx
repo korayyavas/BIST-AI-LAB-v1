@@ -1,14 +1,61 @@
-import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+
+import {
+    Routes,
+    Route,
+} from "react-router-dom";
+
+import {
+    Box,
+    CircularProgress,
+} from "@mui/material";
 
 import MainLayout from "./layouts/MainLayout";
 
-import DashboardPage from "./features/DashboardPage";
+const DashboardPage = lazy(() =>
+    import("./features/DashboardPage"),
+);
 
-import Portfolio from "./pages/Portfolio";
-import Scanner from "./pages/Scanner";
-import News from "./pages/News";
-import Research from "./pages/Research";
-import Settings from "./pages/Settings";
+const Portfolio = lazy(() =>
+    import("./pages/Portfolio"),
+);
+
+const Scanner = lazy(() =>
+    import("./pages/Scanner"),
+);
+
+const News = lazy(() =>
+    import("./pages/News"),
+);
+
+const Research = lazy(() =>
+    import("./pages/Research"),
+);
+
+const Settings = lazy(() =>
+    import("./pages/Settings"),
+);
+
+function Loading() {
+
+    return (
+
+        <Box
+            sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+            }}
+        >
+
+            <CircularProgress />
+
+        </Box>
+
+    );
+
+}
 
 export default function App() {
 
@@ -16,39 +63,45 @@ export default function App() {
 
         <MainLayout>
 
-            <Routes>
+            <Suspense
+                fallback={<Loading />}
+            >
 
-                <Route
-                    path="/"
-                    element={<DashboardPage />}
-                />
+                <Routes>
 
-                <Route
-                    path="/portfolio"
-                    element={<Portfolio />}
-                />
+                    <Route
+                        path="/"
+                        element={<DashboardPage />}
+                    />
 
-                <Route
-                    path="/scanner"
-                    element={<Scanner />}
-                />
+                    <Route
+                        path="/portfolio"
+                        element={<Portfolio />}
+                    />
 
-                <Route
-                    path="/news"
-                    element={<News />}
-                />
+                    <Route
+                        path="/scanner"
+                        element={<Scanner />}
+                    />
 
-                <Route
-                    path="/research"
-                    element={<Research />}
-                />
+                    <Route
+                        path="/news"
+                        element={<News />}
+                    />
 
-                <Route
-                    path="/settings"
-                    element={<Settings />}
-                />
+                    <Route
+                        path="/research"
+                        element={<Research />}
+                    />
 
-            </Routes>
+                    <Route
+                        path="/settings"
+                        element={<Settings />}
+                    />
+
+                </Routes>
+
+            </Suspense>
 
         </MainLayout>
 
