@@ -1,120 +1,57 @@
-import ReactECharts from "echarts-for-react";
+import { lazy, Suspense } from "react";
 
-export default function RadarChart(){
+import {
+    Box,
+    CircularProgress,
+} from "@mui/material";
 
-    const option={
+const EChart = lazy(() =>
+    import("echarts-for-react")
+);
 
-        backgroundColor:"#11161d",
+function Loading() {
 
-        tooltip:{},
+    return (
 
-        radar:{
+        <Box
+            sx={{
+                height: 320,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+            }}
+        >
 
-            radius:"70%",
+            <CircularProgress />
 
-            indicator:[
+        </Box>
 
-                {name:"ML",max:100},
+    );
 
-                {name:"Technical",max:100},
+}
 
-                {name:"News",max:100},
+export default function RadarChart(props) {
 
-                {name:"Research",max:100},
-
-                {name:"KAP",max:100}
-
-            ],
-
-            axisName:{
-
-                color:"#ffffff",
-
-                fontSize:13
-
-            },
-
-            splitLine:{
-
-                lineStyle:{
-
-                    color:"#2d3748"
-
-                }
-
-            },
-
-            splitArea:{
-
-                areaStyle:{
-
-                    color:["#11161d"]
-
-                }
-
-            }
-
-        },
-
-        series:[
-
-            {
-
-                type:"radar",
-
-                areaStyle:{
-
-                    opacity:.35
-
-                },
-
-                lineStyle:{
-
-                    width:3
-
-                },
-
-                data:[
-
-                    {
-
-                        value:[
-
-                            52,
-
-                            40,
-
-                            77,
-
-                            86,
-
-                            50
-
-                        ]
-
-                    }
-
-                ]
-
-            }
-
-        ]
-
+    const option = {
+        radar: {},
+        series: [],
     };
 
-    return(
+    return (
 
-        <ReactECharts
+        <Suspense
+            fallback={<Loading />}
+        >
 
-            option={option}
+            <EChart
+                option={option}
+                style={{
+                    height: 320,
+                }}
+                {...props}
+            />
 
-            style={{
-
-                height:340
-
-            }}
-
-        />
+        </Suspense>
 
     );
 

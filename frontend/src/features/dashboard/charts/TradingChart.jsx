@@ -1,82 +1,66 @@
+import { lazy, Suspense } from "react";
+
 import {
-
-    Paper,
-
-    Typography,
-
-    Box
-
+    Box,
+    CircularProgress,
 } from "@mui/material";
 
-export default function TradingChart(){
+const EChart = lazy(() =>
+    import("echarts-for-react")
+);
 
-    return(
-
-        <Paper
-
+function ChartLoading() {
+    return (
+        <Box
             sx={{
-
-                p:2,
-
-                height:420,
-
-                bgcolor:"#11161d",
-
-                border:"1px solid #26313d"
-
+                height: 420,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
             }}
+        >
+            <CircularProgress />
+        </Box>
+    );
+}
 
+export default function TradingChart(props) {
+
+    const option = {
+        animation: true,
+
+        tooltip: {
+            trigger: "axis",
+        },
+
+        xAxis: {
+            type: "category",
+            data: [],
+        },
+
+        yAxis: {
+            type: "value",
+        },
+
+        series: [],
+    };
+
+    return (
+
+        <Suspense
+            fallback={<ChartLoading />}
         >
 
-            <Typography
-
-                variant="h5"
-
-                mb={2}
-
-            >
-
-                Price Chart
-
-            </Typography>
-
-            <Box
-
-                sx={{
-
-                    width:"100%",
-
-                    height:"350px",
-
-                    borderRadius:3,
-
-                    overflow:"hidden"
-
+            <EChart
+                option={option}
+                style={{
+                    width: "100%",
+                    height: 420,
                 }}
+                {...props}
+            />
 
-            >
-
-                <iframe
-
-                    title="TradingView"
-
-                    width="100%"
-
-                    height="100%"
-
-                    frameBorder="0"
-
-                    allowTransparency
-
-                    scrolling="no"
-
-                    src="https://s.tradingview.com/widgetembed/?symbol=BIST:ASELS&interval=D&theme=dark"
-
-                />
-
-            </Box>
-
-        </Paper>
+        </Suspense>
 
     );
 
