@@ -1,14 +1,17 @@
 import {
     AppBar,
     Box,
+    Chip,
     CssBaseline,
+    Divider,
     Drawer,
     List,
     ListItemButton,
     ListItemIcon,
     ListItemText,
+    Stack,
     Toolbar,
-    Typography
+    Typography,
 } from "@mui/material";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -17,170 +20,160 @@ import NewspaperIcon from "@mui/icons-material/Newspaper";
 import DescriptionIcon from "@mui/icons-material/Description";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Link } from "react-router-dom";
+import CircleIcon from "@mui/icons-material/Circle";
 
-const drawerWidth = 250;
+import { Link, useLocation } from "react-router-dom";
+
+const drawerWidth = 260;
+
+const menu = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
+    { text: "Portfolio", icon: <AccountBalanceWalletIcon />, path: "/portfolio" },
+    { text: "Scanner", icon: <ShowChartIcon />, path: "/scanner" },
+    { text: "Research", icon: <DescriptionIcon />, path: "/research" },
+    { text: "News", icon: <NewspaperIcon />, path: "/news" },
+    { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+];
 
 export default function MainLayout({ children }) {
 
-    const menu = [
-
-        {
-            text: "Dashboard",
-            icon: <DashboardIcon/>
-        },
-
-        {
-            text: "Portfolio",
-            icon: <AccountBalanceWalletIcon/>
-        },
-
-        {
-            text: "Scanner",
-            icon: <ShowChartIcon/>
-        },
-
-        {
-            text: "Research",
-            icon: <DescriptionIcon/>
-        },
-
-        {
-            text: "News",
-            icon: <NewspaperIcon/>
-        },
-
-        {
-            text: "Settings",
-            icon: <SettingsIcon/>
-        }
-
-    ];
+    const location = useLocation();
 
     return (
+        <Box sx={{ display: "flex", bgcolor: "#090c10" }}>
 
-        <Box sx={{ display:"flex" }}>
-
-            <CssBaseline/>
+            <CssBaseline />
 
             <AppBar
+                elevation={0}
                 position="fixed"
                 sx={{
-                    bgcolor:"#11161d",
-                    zIndex:1300
+                    bgcolor: "#11161d",
+                    borderBottom: "1px solid #1f2937",
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
             >
-
-                <Toolbar>
-
-                    <Typography
-                        variant="h5"
-                        fontWeight={700}
+                <Toolbar
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        alignItems="center"
                     >
+                        <Typography
+                            variant="h5"
+                            fontWeight={800}
+                        >
+                            BIST AI LAB
+                        </Typography>
 
-                        BIST AI LAB
+                        <Chip
+                            label="v7"
+                            size="small"
+                            color="primary"
+                        />
+                    </Stack>
 
-                    </Typography>
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        alignItems="center"
+                    >
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                        >
+                            Backend
+                        </Typography>
 
+                        <CircleIcon
+                            sx={{
+                                fontSize: 11,
+                                color: "#22c55e",
+                            }}
+                        />
+
+                        <Typography variant="body2">
+                            Connected
+                        </Typography>
+                    </Stack>
                 </Toolbar>
-
             </AppBar>
 
             <Drawer
-
                 variant="permanent"
-
                 sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
 
-                    width:drawerWidth,
-
-                    flexShrink:0,
-
-                    "& .MuiDrawer-paper":{
-
-                        width:drawerWidth,
-
-                        bgcolor:"#0f141b",
-
-                        color:"white",
-
-                        borderRight:"1px solid #1f2937"
-
-                    }
-
+                    "& .MuiDrawer-paper": {
+                        width: drawerWidth,
+                        bgcolor: "#0f141b",
+                        color: "#fff",
+                        borderRight: "1px solid #1f2937",
+                    },
                 }}
-
             >
+                <Toolbar />
 
-                <Toolbar/>
+                <Divider />
 
-                <List>
+                <List sx={{ mt: 1 }}>
+                    {menu.map((item) => (
+                        <ListItemButton
+                            key={item.path}
+                            component={Link}
+                            to={item.path}
+                            selected={location.pathname === item.path}
+                            sx={{
+                                mx: 1,
+                                mb: 0.5,
+                                borderRadius: 2,
 
-                    {
+                                "&.Mui-selected": {
+                                    bgcolor: "primary.main",
+                                    color: "#fff",
+                                },
 
-                        menu.map(item=>(
-
-                            <ListItemButton
-                                component={Link}
-                                to={
-                                    item.text==="Dashboard"
-                                    ? "/"
-                                    : "/" + item.text.toLowerCase()
-                                }
+                                "&.Mui-selected:hover": {
+                                    bgcolor: "primary.dark",
+                                },
+                            }}
+                        >
+                            <ListItemIcon
+                                sx={{
+                                    color: "inherit",
+                                    minWidth: 40,
+                                }}
                             >
+                                {item.icon}
+                            </ListItemIcon>
 
-                                <ListItemIcon
-                                    sx={{
-                                        color:"#3b82f6"
-                                    }}
-                                >
-
-                                    {item.icon}
-
-                                </ListItemIcon>
-
-                                <ListItemText
-
-                                    primary={item.text}
-
-                                />
-
-                            </ListItemButton>
-
-                        ))
-
-                    }
-
+                            <ListItemText primary={item.text} />
+                        </ListItemButton>
+                    ))}
                 </List>
-
             </Drawer>
 
             <Box
-
                 component="main"
-
                 sx={{
-
-                    flexGrow:1,
-
-                    p:3,
-
-                    bgcolor:"#090c10",
-
-                    minHeight:"100vh"
-
+                    flexGrow: 1,
+                    minHeight: "100vh",
+                    bgcolor: "#090c10",
                 }}
-
             >
+                <Toolbar />
 
-                <Toolbar/>
-
-                {children}
-
+                <Box sx={{ p: 3 }}>
+                    {children}
+                </Box>
             </Box>
 
         </Box>
-
     );
-
 }
