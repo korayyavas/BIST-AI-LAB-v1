@@ -9,13 +9,15 @@ import {
 
 import AIScoreCard from "./dashboard/cards/AIScoreCard";
 import KPICard from "./dashboard/cards/KPICard";
-import RadarChart from "./charts/RadarChart";
-import PortfolioPanel from "./panels/PortfolioPanel";
-import NewsPanel from "./panels/NewsPanel";
-import ResearchPanel from "./panels/ResearchPanel";
-import KapPanel from "./panels/KapPanel";
-import TradingChart from "./charts/TradingChart";
-import StatusBar from "./widgets/StatusBar";
+import RadarChart from "./dashboard/charts/RadarChart";
+import TradingChart from "./dashboard/charts/TradingChart";
+
+import PortfolioPanel from "./dashboard/panels/PortfolioPanel";
+import NewsPanel from "./dashboard/panels/NewsPanel";
+import ResearchPanel from "./dashboard/panels/ResearchPanel";
+import KapPanel from "./dashboard/panels/KapPanel";
+
+import StatusBar from "./dashboard/widgets/StatusBar";
 
 export default function DashboardPage(){
 

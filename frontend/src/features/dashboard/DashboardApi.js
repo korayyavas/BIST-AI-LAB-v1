@@ -1,69 +1,66 @@
 import axios from "../../api/api";
 
-export async function loadDashboard(symbol){
+async function post(endpoint, symbol) {
+    const { data } = await axios.post(endpoint, {
+        symbol,
+    });
 
-    const intelligence=await axios.post(
+    return data;
+}
 
-        "/intelligence",
+export async function loadDashboard(symbol) {
 
-        {
+    const [
+        intelligence,
+        news,
+        research,
+        kap,
+    ] = await Promise.allSettled([
+        post("/intelligence", symbol),
+        post("/news", symbol),
+        post("/research", symbol),
+        post("/kap", symbol),
+    ]);
 
-            symbol
+    return {
+        intelligence:
+            intelligence.status === "fulfilled"
+                ? intelligence.value
+                : null,
 
-        }
+        news:
+            news.status === "fulfilled"
+                ? news.value.news ?? []
+                : [],
 
-    );
+        research:
+            research.status === "fulfilled"
+                ? research.value.reports ?? []
+                : [],
 
-    const news=await axios.post(
+        kap:
+            kap.status === "fulfilled"
+                ? (
+                      kap.value.events ??
+                      kap.value.kap ??
+                      []
+                  )
+                : [],
 
-        "/news",
+        errors: {
+            intelligence:
+                intelligence.status === "rejected",
 
-        {
+            news:
+                news.status === "rejected",
 
-            symbol
+            research:
+                research.status === "rejected",
 
-        }
+            kap:
+                kap.status === "rejected",
+        },
 
-    );
-
-    const research=await axios.post(
-
-        "/research",
-
-        {
-
-            symbol
-
-        }
-
-    );
-
-    const kap=await axios.post(
-
-        "/kap",
-
-        {
-
-            symbol
-
-        }
-
-    );
-
-    return{
-
-        intelligence:intelligence.data,
-
-        news:news.data.news||[],
-
-        research:research.data.reports||[],
-
-        kap:kap.data.events||
-
-            kap.data.kap||
-
-            []
-
+        loadedAt: new Date().toISOString(),
     };
-
 }
