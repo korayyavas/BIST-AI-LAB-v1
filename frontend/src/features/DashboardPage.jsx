@@ -118,15 +118,35 @@ function DashboardContent() {
                 >
                     <Stack spacing={2}>
 
-                        <KPICard title="ML" />
+                        <KPICard
+                            title="ML"
+                            value={intelligence.ml_score}
+                            color="primary"
+                        />
 
-                        <KPICard title="Technical" />
+                        <KPICard
+                            title="Technical"
+                            value={intelligence.technical_score}
+                            color="success"
+                        />
 
-                        <KPICard title="News" />
+                        <KPICard
+                            title="News"
+                            value={intelligence.news_score}
+                            color="warning"
+                        />
 
-                        <KPICard title="Research" />
+                        <KPICard
+                            title="Research"
+                            value={intelligence.research_score}
+                            color="secondary"
+                        />
 
-                        <KPICard title="KAP" />
+                        <KPICard
+                            title="KAP"
+                            value={intelligence.kap_score}
+                            color="info"
+                        />
 
                     </Stack>
                 </Grid>
