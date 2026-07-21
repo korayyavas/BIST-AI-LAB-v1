@@ -4,7 +4,7 @@ BIST AI LAB v7
 """
 
 from __future__ import annotations
-
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 
 from core.startup import Startup
@@ -44,7 +44,18 @@ app = FastAPI(
     title="BIST AI LAB API",
     version="7.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ============================================================
 # Controllers
 # ============================================================
@@ -201,4 +212,49 @@ def research(req: ResearchRequest):
 
     return {
         "reports": reports,
+    }
+# ============================================================
+# News
+# ============================================================
+
+@app.post("/news")
+def news(req: IntelligenceRequest):
+
+    service = NewsService()
+
+    news = service.get_news(req.symbol.upper())
+
+    return {
+        "news": [item.__dict__ for item in news]
+    }
+
+
+# ============================================================
+# KAP
+# ============================================================
+
+@app.post("/kap")
+def kap(req: IntelligenceRequest):
+
+    service = KapService()
+
+    events = service.get_announcements(req.symbol.upper())
+
+    return {
+        "kap": [item.__dict__ for item in events]
+    }
+
+# ============================================================
+# KAP
+# ============================================================
+
+@app.post("/kap")
+def kap(req: IntelligenceRequest):
+
+    service = KapService()
+
+    events = service.get_announcements(req.symbol.upper())
+
+    return {
+        "kap": [item.__dict__ for item in events]
     }

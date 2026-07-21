@@ -1,0 +1,20 @@
+{
+  "symbol": "{   \"SYMBOL\": \"ASELS\" }",
+  "decision": "STRONG SELL",
+  "ai_score": 25.0,
+  "confidence": 85,
+  "ml_score": 0.0,
+  "technical_score": 0.0,
+  "research_score": 50.0,
+  "news_score": 0.0,
+  "kap_score": 50.0,
+  "consensus": "HOLD",
+  "target_price": null,
+  "risk": "LOW",
+  "summary": "",
+  "sources": {
+    "news": 0,
+    "kap": 1,
+    "research": 2
+  }
+}

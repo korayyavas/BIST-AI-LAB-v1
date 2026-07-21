@@ -15,34 +15,29 @@ import RemoveIcon from "@mui/icons-material/Remove";
 
 import { useEffect,useState } from "react";
 
-import axios from "../../../api/api";
+import { getIntelligence } from "../../../services/intelligenceApi";
 
 export default function AIScoreCard(){
 
     const [data,setData]=useState(null);
 
-    useEffect(()=>{
-
+    useEffect(() => {
         load();
+    }, []);
 
-    },[]);
+    const load = async () => {
+        try {
+            const result = await getIntelligence("ASELS");
 
-    const load=async()=>{
+            console.log("AI RESULT:", result);
 
-        const res=await axios.post(
+            setData(result);
 
-            "/intelligence",
+        } catch (err) {
 
-            {
+            console.error("AI ERROR:", err);
 
-                symbol:"ASELS"
-
-            }
-
-        );
-
-        setData(res.data);
-
+        }
     };
 
     if(!data)
