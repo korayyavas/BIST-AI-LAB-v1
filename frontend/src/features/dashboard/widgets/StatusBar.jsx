@@ -11,7 +11,17 @@ import MemoryIcon from "@mui/icons-material/Memory";
 import StorageIcon from "@mui/icons-material/Storage";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 
-export default function StatusBar() {
+export default function StatusBar({
+
+    loadedAt,
+
+    version,
+
+    modules = {},
+
+}) {
+
+    const moduleCount = Object.values(modules).filter(Boolean).length;
 
     return (
 
@@ -32,13 +42,19 @@ export default function StatusBar() {
                     <Stack spacing={1}>
 
                         <Typography variant="caption">
+
                             Backend
+
                         </Typography>
 
                         <Chip
+
                             icon={<CheckCircleIcon />}
+
                             label="ONLINE"
+
                             color="success"
+
                         />
 
                     </Stack>
@@ -50,13 +66,19 @@ export default function StatusBar() {
                     <Stack spacing={1}>
 
                         <Typography variant="caption">
+
                             Intelligence Engine
+
                         </Typography>
 
                         <Chip
+
                             icon={<PsychologyIcon />}
-                            label="ACTIVE"
+
+                            label={`${moduleCount} MODULE ACTIVE`}
+
                             color="primary"
+
                         />
 
                     </Stack>
@@ -68,13 +90,19 @@ export default function StatusBar() {
                     <Stack spacing={1}>
 
                         <Typography variant="caption">
+
                             Cache
+
                         </Typography>
 
                         <Chip
+
                             icon={<StorageIcon />}
+
                             label="ENABLED"
+
                             color="success"
+
                         />
 
                     </Stack>
@@ -86,16 +114,39 @@ export default function StatusBar() {
                     <Stack spacing={1}>
 
                         <Typography variant="caption">
+
                             Version
+
                         </Typography>
 
                         <Chip
+
                             icon={<MemoryIcon />}
-                            label="BIST AI LAB v9"
+
+                            label={version || "BIST AI LAB v10"}
+
                             color="info"
+
                         />
 
                     </Stack>
+
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                    >
+
+                        Son Güncelleme :
+                        {" "}
+                        {loadedAt
+                            ? new Date(loadedAt).toLocaleString("tr-TR")
+                            : "-"}
+
+                    </Typography>
 
                 </Grid>
 

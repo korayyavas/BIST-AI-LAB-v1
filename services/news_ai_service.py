@@ -1,147 +1,95 @@
 """
 AI News Intelligence Service
-BIST AI LAB v9
+BIST AI LAB v10
 """
 
 from __future__ import annotations
 
 import json
 
-from openai import OpenAI
-
-from config.settings import OPENAI_API_KEY
+from services.ollama_service import OllamaService
 
 
 class NewsAIService:
 
     def __init__(self):
 
-        self.client = OpenAI(
-            api_key=OPENAI_API_KEY
-        )
+        self.ollama = OllamaService()
 
     # =====================================================
 
-    def analyze(self, title: str):
+    def analyze(self, headlines: list[str]):
+
+        if not headlines:
+
+            return []
 
         prompt = f"""
-Sen kıdemli bir finans analistisisin.
+Sen 20 yıllık deneyime sahip kıdemli bir finans analisti ve ekonomi editörüsün.
 
-Görevlerin:
+Aşağıdaki haber başlıklarını analiz et.
 
-1. Haberi Türkçeye çevir.
-2. En fazla iki cümlelik özet oluştur.
-3. Piyasa etkisini belirle.
-4. Haber önem derecesini belirle.
-5. Kısa AI yorumu oluştur.
+Her haber için yalnızca JSON üret.
 
-Yatırım tavsiyesi verme.
+Açıklama yazma.
+Markdown kullanma.
+Kod bloğu kullanma.
 
-Sadece JSON döndür.
+JSON formatı:
 
-JSON formatı
+[
+  {{
+    "title_tr":"",
+    "summary":"",
+    "market_effect":"POZITIF",
+    "importance":3,
+    "ai_comment":""
+  }}
+]
 
-{{
-"title_tr":"",
-"summary":"",
-"market_effect":"",
-"importance":0,
-"ai_comment":""
-}}
-
-Kurallar
-
-market_effect
+market_effect sadece:
 
 POZITIF
 NOTR
 NEGATIF
 
-importance
+importance:
 
-1-5
+1
+2
+3
+4
+5
 
-Haber
+Haberler:
 
-{title}
+{chr(10).join(f"- {x}" for x in headlines)}
 """
+
+        content = self.ollama.ask(prompt)
+
+        content = content.strip()
+
+        if content.startswith("```"):
+
+            content = (
+                content
+                .replace("```json", "")
+                .replace("```JSON", "")
+                .replace("```", "")
+                .strip()
+            )
 
         try:
 
-            response = self.client.chat.completions.create(
-
-                model="gpt-4.1-mini",
-
-                temperature=0.2,
-
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-            )
-
-            content = response.choices[0].message.content.strip()
-
-            if content.startswith("```"):
-
-                content = (
-                    content.replace("```json", "")
-                    .replace("```", "")
-                    .strip()
-                )
-
             result = json.loads(content)
 
-            return {
+            if isinstance(result, list):
 
-                "title_tr": result.get(
-                    "title_tr",
-                    title,
-                ),
+                return result
 
-                "summary": result.get(
-                    "summary",
-                    "",
-                ),
+        except Exception:
 
-                "market_effect": result.get(
-                    "market_effect",
-                    "NOTR",
-                ),
+            pass
 
-                "importance": int(
-                    result.get(
-                        "importance",
-                        3,
-                    )
-                ),
-
-                "ai_comment": result.get(
-                    "ai_comment",
-                    "",
-                ),
-
-            }
-
-        except Exception as e:
-
-            print("=" * 80)
-            print("AI NEWS ERROR")
-            print(e)
-            print("=" * 80)
-
-            return {
-
-                "title_tr": title,
-
-                "summary": "",
-
-                "market_effect": "NOTR",
-
-                "importance": 3,
-
-                "ai_comment": "",
-
-            }
+        return []

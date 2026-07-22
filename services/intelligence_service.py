@@ -1,5 +1,5 @@
 """
-BIST AI LAB Intelligence Service v9
+BIST AI LAB Intelligence Service v10.0
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from services.technical_score_service import TechnicalScoreService
 from services.news_consensus_service import NewsConsensusService
 from services.research_controller import ResearchController
 from services.kap_service import KapService
-
 
 
 class IntelligenceService:
@@ -30,113 +29,186 @@ class IntelligenceService:
 
         self.kap = KapService()
 
-       
-
     # =========================================================
 
     def analyze(self, symbol: str):
 
-        prediction = {}
+        prediction = {
+            "score": 50,
+        }
 
-        technical = {}
+        technical = {
+            "score": 50,
+        }
 
-        news = {}
+        news = {
+            "score": 50,
+        }
 
-        research = {}
+        research = {
+            "score": 50,
+            "reports": [],
+        }
 
-        kap = {}
+        kap = {
+            "score": 50,
+            "events": [],
+        }
 
         risk = {
             "risk_score": 50,
         }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # Prediction
+        # =====================================================
 
         try:
 
             prediction = self.prediction.predict(symbol)
 
+            if prediction is None:
+                prediction = {"score": 50}
+
         except Exception as e:
 
             prediction = {
+
                 "score": 50,
+
                 "error": str(e),
+
             }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # Technical
+        # =====================================================
 
         try:
 
             technical = self.technical.analyze(symbol)
 
+            if technical is None:
+                technical = {"score": 50}
+
         except Exception as e:
 
             technical = {
+
                 "score": 50,
+
                 "error": str(e),
+
             }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # News
+        # =====================================================
 
         try:
 
             news = self.news.analyze(symbol)
 
+            if news is None:
+                news = {"score": 50}
+
         except Exception as e:
 
             news = {
+
                 "score": 50,
+
                 "error": str(e),
+
             }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # Research
+        # =====================================================
 
         try:
 
-            research = self.research.analyze(symbol)
+            reports = self.research.analyze(symbol)
 
-            if isinstance(research, list):
+            if isinstance(reports, list):
 
                 research = {
-                    "score": 60 if research else 50,
-                    "reports": research,
+
+                    "score": 60 if len(reports) else 50,
+
+                    "reports": reports,
+
+                }
+
+            elif isinstance(reports, dict):
+
+                research = reports
+
+            else:
+
+                research = {
+
+                    "score": 50,
+
+                    "reports": [],
+
                 }
 
         except Exception as e:
 
             research = {
+
                 "score": 50,
+
+                "reports": [],
+
                 "error": str(e),
+
             }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # KAP
+        # =====================================================
 
         try:
 
-            announcements = self.kap.get_announcements(symbol)
+            events = self.kap.get_announcements(symbol)
 
             kap = {
 
-                "score": 60 if announcements else 50,
+                "score": 60 if len(events) else 50,
 
-                "events": announcements,
+                "events": events,
 
             }
 
         except Exception as e:
 
             kap = {
+
                 "score": 50,
+
+                "events": [],
+
                 "error": str(e),
+
             }
 
-        # -----------------------------------------------------
+        # =====================================================
+        # Risk
+        # =====================================================
 
+        risk = {
 
+            "risk_score": 50,
 
-        # -----------------------------------------------------
+        }
 
-        return self.engine.analyze(
+        # =====================================================
+        # Intelligence Engine
+        # =====================================================
+
+        result = self.engine.analyze(
 
             prediction=prediction,
 
@@ -151,3 +223,7 @@ class IntelligenceService:
             risk=risk,
 
         )
+
+        result["symbol"] = symbol.upper()
+
+        return result

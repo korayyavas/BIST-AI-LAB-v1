@@ -5,7 +5,80 @@ import {
     Box,
     Chip,
     Stack,
+    Tooltip,
 } from "@mui/material";
+
+function getStatus(score) {
+
+    if (score >= 90) {
+
+        return {
+
+            text: "MÜKEMMEL",
+
+            color: "#00E676",
+
+        };
+
+    }
+
+    if (score >= 80) {
+
+        return {
+
+            text: "ÇOK GÜÇLÜ",
+
+            color: "#00C853",
+
+        };
+
+    }
+
+    if (score >= 65) {
+
+        return {
+
+            text: "GÜÇLÜ",
+
+            color: "#4CAF50",
+
+        };
+
+    }
+
+    if (score >= 50) {
+
+        return {
+
+            text: "NÖTR",
+
+            color: "#FFC107",
+
+        };
+
+    }
+
+    if (score >= 35) {
+
+        return {
+
+            text: "ZAYIF",
+
+            color: "#FF7043",
+
+        };
+
+    }
+
+    return {
+
+        text: "ÇOK ZAYIF",
+
+        color: "#F44336",
+
+    };
+
+}
 
 export default function KPICard({
 
@@ -13,66 +86,43 @@ export default function KPICard({
 
     value = 0,
 
+    subtitle = "",
+
 }) {
 
     const score = Math.max(
+
         0,
-        Math.min(100, Number(value) || 0),
+
+        Math.min(
+
+            100,
+
+            Number(value) || 0,
+
+        ),
+
     );
 
-    let color = "#2196F3";
-    let status = "NÖTR";
-
-    if (score >= 80) {
-
-        color = "#00C853";
-        status = "ÇOK GÜÇLÜ";
-
-    }
-
-    else if (score >= 65) {
-
-        color = "#4CAF50";
-        status = "GÜÇLÜ";
-
-    }
-
-    else if (score >= 50) {
-
-        color = "#FFB300";
-        status = "NÖTR";
-
-    }
-
-    else if (score >= 30) {
-
-        color = "#FF7043";
-        status = "ZAYIF";
-
-    }
-
-    else {
-
-        color = "#F44336";
-        status = "ÇOK ZAYIF";
-
-    }
+    const status = getStatus(score);
 
     return (
 
         <Paper
 
+            elevation={3}
+
             sx={{
 
                 p: 2,
 
-                borderRadius: 3,
+                height: "100%",
 
-                bgcolor: "#11161d",
+                borderRadius: 4,
+
+                background: "#10151d",
 
                 border: "1px solid #26313d",
-
-                height: "100%",
 
             }}
 
@@ -88,31 +138,53 @@ export default function KPICard({
 
             >
 
-                <Typography
+                <Box>
 
-                    color="#9ca3af"
+                    <Typography
 
-                    fontWeight={600}
+                        fontWeight={700}
 
-                >
+                        color="#fff"
 
-                    {title}
+                    >
 
-                </Typography>
+                        {title}
+
+                    </Typography>
+
+                    {
+
+                        subtitle &&
+
+                        <Typography
+
+                            variant="caption"
+
+                            color="#8b98a5"
+
+                        >
+
+                            {subtitle}
+
+                        </Typography>
+
+                    }
+
+                </Box>
 
                 <Chip
 
                     size="small"
 
-                    label={status}
+                    label={status.text}
 
                     sx={{
 
-                        bgcolor: color,
+                        bgcolor: status.color,
 
                         color: "#fff",
 
-                        fontWeight: 600,
+                        fontWeight: 700,
 
                     }}
 
@@ -142,6 +214,8 @@ export default function KPICard({
 
                     fontWeight={700}
 
+                    color="#fff"
+
                 >
 
                     {score.toFixed(1)}
@@ -150,9 +224,7 @@ export default function KPICard({
 
                 <Typography
 
-                    color="#9ca3af"
-
-                    mb={0.5}
+                    color="#8b98a5"
 
                 >
 
@@ -162,31 +234,41 @@ export default function KPICard({
 
             </Box>
 
-            <LinearProgress
+            <Tooltip
 
-                variant="determinate"
+                title={`${status.text} (${score.toFixed(1)})`}
 
-                value={score}
+            >
 
-                sx={{
+                <LinearProgress
 
-                    mt: 2,
+                    variant="determinate"
 
-                    height: 10,
+                    value={score}
 
-                    borderRadius: 10,
+                    sx={{
 
-                    backgroundColor: "#26313d",
+                        mt: 2,
 
-                    "& .MuiLinearProgress-bar": {
+                        height: 12,
 
-                        backgroundColor: color,
+                        borderRadius: 12,
 
-                    },
+                        backgroundColor: "#26313d",
 
-                }}
+                        "& .MuiLinearProgress-bar": {
 
-            />
+                            backgroundColor: status.color,
+
+                            borderRadius: 12,
+
+                        },
+
+                    }}
+
+                />
+
+            </Tooltip>
 
         </Paper>
 

@@ -33,22 +33,42 @@ function DashboardContent() {
     const { selectedSymbol } = useDashboardContext();
 
     const {
+
         loading,
+
         error,
+
         data,
-    } = useDashboard(selectedSymbol);
+
+    } = useDashboard(
+
+        selectedSymbol,
+
+    );
 
     const intelligence = useMemo(
+
         () => data?.intelligence ?? {},
+
         [data],
+
     );
+    console.log("========== DASHBOARD ==========");
+    console.log(data);
+    console.log("NEWS LENGTH:", data?.news?.length);
+    console.log("NEWS:", data?.news);
+    console.log("===============================");
 
     if (error) {
 
         return (
+
             <Alert severity="error">
+
                 Dashboard yüklenemedi.
+
             </Alert>
+
         );
 
     }
@@ -58,95 +78,260 @@ function DashboardContent() {
         <Box sx={{ p: 3 }}>
 
             <Typography
+
                 variant="h4"
+
                 fontWeight={700}
+
                 mb={3}
+
             >
-                BIST AI LAB
+
+                🤖 BIST AI LAB v10
+
             </Typography>
 
             <Grid container spacing={2}>
 
-                <Grid size={{ xs:12, lg:3 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 3 }}>
+
                     <PortfolioPanel />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:4 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+
                     <AIScoreCard
+
                         loading={loading}
+
                         data={{
-                            score: intelligence.ai_score,
-                            recommendation: intelligence.decision,
-                            confidence: intelligence.confidence,
-                            strengths: [],
-                            weaknesses: [],
+
+                            ai_score:
+
+                                intelligence.ai_score,
+
+                            decision:
+
+                                intelligence.decision,
+
+                            confidence:
+
+                                intelligence.confidence,
+
+                            strengths:
+
+                                intelligence.strengths ?? [],
+
+                            weaknesses:
+
+                                intelligence.weaknesses ?? [],
+
+                            explanations:
+
+                                intelligence.explanations ?? [],
+
                         }}
+
                     />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:5 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 5 }}>
+
+                    
+                    
                     <NewsPanel
-                        news={data?.news ?? []}
+
+                        news={
+
+                            data?.news ?? []
+
+                        }
+
                         loading={loading}
+
                     />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:3 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 3 }}>
+
                     <Stack spacing={2}>
 
                         <KPICard
+
                             title="ML"
-                            value={intelligence.ml_score}
+
+                            subtitle="Makine Öğrenmesi"
+
+                            value={
+
+                                intelligence.ml_score
+
+                            }
+
                         />
 
                         <KPICard
+
                             title="Technical"
-                            value={intelligence.technical_score}
+
+                            subtitle="Teknik Analiz"
+
+                            value={
+
+                                intelligence.technical_score
+
+                            }
+
                         />
 
                         <KPICard
+
                             title="News"
-                            value={intelligence.news_score}
+
+                            subtitle="AI Haber Analizi"
+
+                            value={
+
+                                intelligence.news_score
+
+                            }
+
                         />
 
                         <KPICard
+
                             title="Research"
-                            value={intelligence.research_score}
+
+                            subtitle="Araştırma Raporları"
+
+                            value={
+
+                                intelligence.research_score
+
+                            }
+
                         />
 
                         <KPICard
+
                             title="KAP"
-                            value={intelligence.kap_score}
+
+                            subtitle="Kamuyu Aydınlatma"
+
+                            value={
+
+                                intelligence.kap_score
+
+                            }
+
                         />
 
                     </Stack>
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:4 }}>
-                    <RadarChart />
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+
+                    <RadarChart
+
+                        intelligence={
+
+                            intelligence
+
+                        }
+
+                    />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:5 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 5 }}>
+
                     <ResearchPanel
-                        reports={data?.research ?? []}
+
+                        reports={
+
+                            data?.research ?? []
+
+                        }
+
                         loading={loading}
+
                     />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:8 }}>
-                    <TradingChart />
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 8 }}>
+
+                    <TradingChart
+
+                        symbol={selectedSymbol}
+
+                    />
+
                 </Grid>
 
-                <Grid size={{ xs:12, lg:4 }}>
+                {/* ================================================= */}
+
+                <Grid size={{ xs: 12, lg: 4 }}>
+
                     <KapPanel
-                        events={data?.kap ?? []}
+
+                        events={
+
+                            data?.kap ?? []
+
+                        }
+
                         loading={loading}
+
                     />
+
                 </Grid>
 
             </Grid>
 
-            <StatusBar />
+            <Box mt={3}>
+
+                <StatusBar
+
+                    loadedAt={
+
+                        data?.loadedAt
+
+                    }
+
+                    version={
+
+                        data?.version?.version
+
+                    }
+
+                    modules={
+
+                        data?.modules
+
+                    }
+
+                />
+
+            </Box>
 
         </Box>
 

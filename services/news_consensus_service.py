@@ -1,16 +1,15 @@
 """
 AI News Consensus Service
-BIST AI LAB v9
+BIST AI LAB v10.0
+Offline AI (Ollama + Gemma3)
 """
 
 from __future__ import annotations
 
 import json
 
-from openai import OpenAI
-
-from config.settings import OPENAI_API_KEY
 from services.news_service import NewsService
+from services.ollama_service import OllamaService
 
 
 class NewsConsensusService:
@@ -19,9 +18,7 @@ class NewsConsensusService:
 
         self.news_service = NewsService()
 
-        self.client = OpenAI(
-            api_key=OPENAI_API_KEY
-        )
+        self.ai = OllamaService()
 
     # ======================================================
 
@@ -29,7 +26,7 @@ class NewsConsensusService:
 
         news = self.news_service.get_news(symbol)
 
-        if len(news) == 0:
+        if not news:
 
             return {
 
@@ -49,6 +46,10 @@ class NewsConsensusService:
 
                 "negative": 0,
 
+                "strengths": [],
+
+                "risks": [],
+
             }
 
         headlines = []
@@ -59,34 +60,53 @@ class NewsConsensusService:
 
         for item in news:
 
-            headlines.append(item.title_tr)
+            headlines.append(
+
+                f"- {item.title_tr}"
+
+            )
 
             if item.sentiment == "POSITIVE":
+
                 positive += 1
 
             elif item.sentiment == "NEGATIVE":
+
                 negative += 1
 
             else:
+
                 neutral += 1
 
         prompt = f"""
-Sen kıdemli bir finans analistisisin.
+Sen kıdemli bir portföy yöneticisisin.
 
-Aşağıdaki haberleri birlikte değerlendir.
+Aşağıdaki haberleri birlikte analiz et.
 
-Yatırım tavsiyesi verme.
+Kurallar
 
-JSON dışında hiçbir şey yazma.
+- Türkçe yaz.
+- Sadece JSON döndür.
+- Markdown kullanma.
+- Yatırım tavsiyesi verme.
+- Haberlerin genel etkisini değerlendir.
 
-JSON formatı
+JSON
 
 {{
 "summary":"",
-"market_view":"",
-"importance":0,
-"score":0,
-"top_story":""
+"market_view":"POZITIF",
+"importance":3,
+"score":75,
+"top_story":"",
+"strengths":[
+"",
+""
+],
+"risks":[
+"",
+""
+]
 }}
 
 market_view
@@ -97,11 +117,11 @@ NEGATIF
 
 importance
 
-1-5
-
-score
-
-0-100
+1
+2
+3
+4
+5
 
 Haberler
 
@@ -110,29 +130,27 @@ Haberler
 
         try:
 
-            response = self.client.chat.completions.create(
+            content = self.ai.ask(prompt).strip()
 
-                model="gpt-4.1-mini",
+            if content.startswith("```"):
 
-                temperature=0.2,
+                content = (
 
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-            )
+                    content
+                    .replace("```json", "")
+                    .replace("```JSON", "")
+                    .replace("```", "")
+                    .strip()
 
-            result = json.loads(
-                response.choices[0].message.content
-            )
+                )
+
+            result = json.loads(content)
 
         except Exception:
 
             result = {
 
-                "summary": "AI analizine ulaşılamadı.",
+                "summary": "AI haber analizi oluşturulamadı.",
 
                 "market_view": "NOTR",
 
@@ -142,10 +160,92 @@ Haberler
 
                 "top_story": headlines[0],
 
+                "strengths": [],
+
+                "risks": [],
+
             }
 
+        effect = str(
+
+            result.get(
+
+                "market_view",
+
+                "NOTR",
+
+            )
+
+        ).upper()
+
+        mapping = {
+
+            "POSITIVE": "POZITIF",
+
+            "NEGATIVE": "NEGATIF",
+
+            "NEUTRAL": "NOTR",
+
+            "POZITIF": "POZITIF",
+
+            "NEGATIF": "NEGATIF",
+
+            "NOTR": "NOTR",
+
+        }
+
+        result["market_view"] = mapping.get(
+
+            effect,
+
+            "NOTR",
+
+        )
+
+        result["importance"] = int(
+
+            result.get(
+
+                "importance",
+
+                3,
+
+            )
+
+        )
+
+        result["score"] = float(
+
+            result.get(
+
+                "score",
+
+                50,
+
+            )
+
+        )
+
         result["positive"] = positive
+
         result["neutral"] = neutral
+
         result["negative"] = negative
+
+        result["strengths"] = result.get(
+
+            "strengths",
+
+            [],
+
+        )
+
+        result["risks"] = result.get(
+
+            "risks",
+
+            [],
+
+        )
 
         return result

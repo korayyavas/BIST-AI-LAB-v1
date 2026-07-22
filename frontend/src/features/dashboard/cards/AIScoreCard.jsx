@@ -6,11 +6,15 @@ import {
     Stack,
     Chip,
     Divider,
+    List,
+    ListItem,
+    ListItemText,
 } from "@mui/material";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
+
 
 export default function AIScoreCard({
 
@@ -26,7 +30,7 @@ export default function AIScoreCard({
 
             <Paper
                 sx={{
-                    height: 420,
+                    height: 520,
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
@@ -41,29 +45,66 @@ export default function AIScoreCard({
 
     }
 
-    const score = Number(data?.score ?? 0);
+    const score = Number(
 
-    const recommendation = data?.recommendation ?? "HOLD";
+        data.ai_score ??
 
-    const confidence = Number(data?.confidence ?? 0);
+        data.score ??
 
-    const strengths = data?.strengths ?? [];
+        0,
 
-    const weaknesses = data?.weaknesses ?? [];
+    );
+
+    const decision =
+
+        data.decision ??
+
+        data.recommendation ??
+
+        "HOLD";
+
+    const confidence = Number(
+
+        data.confidence ??
+
+        50,
+
+    );
+
+    const strengths =
+
+        data.strengths ??
+
+        [];
+
+    const weaknesses =
+
+        data.weaknesses ??
+
+        [];
+
+    const explanations =
+
+        data.explanations ??
+
+        [];
 
     let color = "#FFC107";
+
     let icon = <RemoveIcon />;
 
-    if (recommendation.includes("BUY")) {
+    if (decision.includes("BUY")) {
 
         color = "#00C853";
+
         icon = <TrendingUpIcon />;
 
     }
 
-    if (recommendation.includes("SELL")) {
+    if (decision.includes("SELL")) {
 
         color = "#F44336";
+
         icon = <TrendingDownIcon />;
 
     }
@@ -76,7 +117,7 @@ export default function AIScoreCard({
 
                 p: 3,
 
-                height: 420,
+                height: 520,
 
                 background: "#10151d",
 
@@ -204,7 +245,7 @@ export default function AIScoreCard({
 
                     icon={icon}
 
-                    label={recommendation}
+                    label={decision}
 
                     sx={{
 
@@ -347,6 +388,62 @@ export default function AIScoreCard({
                         }
 
                     </Stack>
+
+                </Box>
+
+                <Divider flexItem />
+
+                <Box width="100%">
+
+                    <Typography
+
+                        variant="subtitle2"
+
+                        gutterBottom
+
+                    >
+
+                        🧠 Explainable AI
+
+                    </Typography>
+
+                    <List dense>
+
+                        {
+
+                            explanations.length === 0
+
+                                ?
+
+                                <ListItem>
+
+                                    <ListItemText
+
+                                        primary="-"
+
+                                    />
+
+                                </ListItem>
+
+                                :
+
+                                explanations.map((item, index) => (
+
+                                    <ListItem key={index}>
+
+                                        <ListItemText
+
+                                            primary={item}
+
+                                        />
+
+                                    </ListItem>
+
+                                ))
+
+                        }
+
+                    </List>
 
                 </Box>
 

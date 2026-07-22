@@ -1,34 +1,74 @@
 """
-BIST AI LAB Intelligence Engine v9
+BIST AI LAB Intelligence Engine v10.0
 """
 
 from __future__ import annotations
 
-from statistics import mean
+from typing import Any
 
 
 class IntelligenceEngine:
 
+    WEIGHTS = {
+        "prediction": 0.25,
+        "technical": 0.20,
+        "news": 0.20,
+        "research": 0.15,
+        "kap": 0.10,
+        "risk": 0.10,
+    }
+
     def __init__(self):
         pass
 
-    def _safe_score(self, value, default=50):
+    # =========================================================
 
-        if value is None:
+    def _score(self, obj: Any, default: float = 50.0) -> float:
+
+        if obj is None:
             return default
 
-        if isinstance(value, dict):
+        if isinstance(obj, (int, float)):
+            return float(obj)
 
-            if "score" in value:
-                return float(value["score"])
+        if isinstance(obj, dict):
 
-            if "confidence" in value:
-                return float(value["confidence"])
+            for key in (
+                "score",
+                "confidence",
+                "risk_score",
+                "technical_score",
+                "news_score",
+            ):
 
-        if isinstance(value, (int, float)):
-            return float(value)
+                if key in obj:
+
+                    try:
+                        return float(obj[key])
+                    except Exception:
+                        pass
 
         return default
+
+    # =========================================================
+
+    def _recommendation(self, score: float):
+
+        if score >= 85:
+            return "STRONG BUY"
+
+        if score >= 70:
+            return "BUY"
+
+        if score >= 55:
+            return "HOLD"
+
+        if score >= 40:
+            return "SELL"
+
+        return "STRONG SELL"
+
+    # =========================================================
 
     def analyze(
         self,
@@ -40,74 +80,121 @@ class IntelligenceEngine:
         risk,
     ):
 
-        prediction_score = self._safe_score(prediction)
+        prediction_score = self._score(prediction)
 
-        technical_score = self._safe_score(technical)
+        technical_score = self._score(technical)
 
-        news_score = self._safe_score(news)
+        news_score = self._score(news)
 
-        research_score = self._safe_score(research)
+        research_score = self._score(research)
 
-        kap_score = self._safe_score(kap)
+        kap_score = self._score(kap)
 
-        risk_score = 100 - self._safe_score(risk)
+        risk_raw = self._score(risk)
+
+        risk_score = max(0.0, min(100.0, 100.0 - risk_raw))
+
+        components = {
+
+            "Prediction": prediction_score,
+
+            "Technical": technical_score,
+
+            "News": news_score,
+
+            "Research": research_score,
+
+            "KAP": kap_score,
+
+            "Risk": risk_score,
+
+        }
 
         final_score = round(
-            mean(
-                [
-                    prediction_score,
-                    technical_score,
-                    news_score,
-                    research_score,
-                    kap_score,
-                    risk_score,
-                ]
-            ),
+
+            prediction_score * self.WEIGHTS["prediction"]
+
+            + technical_score * self.WEIGHTS["technical"]
+
+            + news_score * self.WEIGHTS["news"]
+
+            + research_score * self.WEIGHTS["research"]
+
+            + kap_score * self.WEIGHTS["kap"]
+
+            + risk_score * self.WEIGHTS["risk"],
+
             2,
+
         )
 
-        if final_score >= 85:
-
-            recommendation = "STRONG BUY"
-
-        elif final_score >= 70:
-
-            recommendation = "BUY"
-
-        elif final_score >= 50:
-
-            recommendation = "HOLD"
-
-        elif final_score >= 30:
-
-            recommendation = "SELL"
-
-        else:
-
-            recommendation = "STRONG SELL"
+        recommendation = self._recommendation(final_score)
 
         strengths = []
 
         weaknesses = []
 
-        modules = {
+        explanations = []
 
-            "Prediction": prediction_score,
-            "Technical": technical_score,
-            "News": news_score,
-            "Research": research_score,
-            "KAP": kap_score,
-            "Risk": risk_score,
+        for module, score in components.items():
 
-        }
+            if score >= 80:
 
-        for name, score in modules.items():
+                strengths.append(module)
 
-            if score >= 70:
-                strengths.append(name)
+                explanations.append(
 
-            elif score <= 40:
-                weaknesses.append(name)
+                    f"{module} çok güçlü."
+
+                )
+
+            elif score >= 65:
+
+                strengths.append(module)
+
+                explanations.append(
+
+                    f"{module} olumlu."
+
+                )
+
+            elif score <= 35:
+
+                weaknesses.append(module)
+
+                explanations.append(
+
+                    f"{module} ciddi risk oluşturuyor."
+
+                )
+
+            elif score <= 50:
+
+                weaknesses.append(module)
+
+                explanations.append(
+
+                    f"{module} zayıf."
+
+                )
+
+        confidence = round(
+
+            min(
+
+                100,
+
+                60
+
+                + len(strengths) * 6
+
+                - len(weaknesses) * 4,
+
+            ),
+
+            1,
+
+        )
 
         return {
 
@@ -115,11 +202,29 @@ class IntelligenceEngine:
 
             "recommendation": recommendation,
 
-            "confidence": final_score,
+            "confidence": confidence,
 
             "strengths": strengths,
 
             "weaknesses": weaknesses,
+
+            "explanations": explanations,
+
+            "module_scores": {
+
+                "prediction": prediction_score,
+
+                "technical": technical_score,
+
+                "news": news_score,
+
+                "research": research_score,
+
+                "kap": kap_score,
+
+                "risk": risk_score,
+
+            },
 
             "components": {
 

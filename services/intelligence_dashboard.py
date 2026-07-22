@@ -1,6 +1,6 @@
 """
 AI Intelligence Dashboard
-BIST AI LAB v8
+BIST AI LAB v10.0 Professional
 """
 
 from __future__ import annotations
@@ -11,18 +11,26 @@ from core.cache_manager import CacheManager
 class IntelligenceDashboard:
 
     def __init__(
+
         self,
+
         symbol_service,
+
         decision_engine,
+
     ):
 
         self.symbol_service = symbol_service
+
         self.decision_engine = decision_engine
+
         self.cache = CacheManager()
 
     # =====================================================
 
     def analyze(self, symbol: str):
+
+        symbol = symbol.upper()
 
         def producer():
 
@@ -44,42 +52,189 @@ class IntelligenceDashboard:
 
             )
 
+            consensus = context.consensus or {}
+
+            explanation = []
+
+            if context.ml_score >= 70:
+
+                explanation.append(
+                    "ML modeli pozitif sinyal üretiyor."
+                )
+
+            elif context.ml_score <= 40:
+
+                explanation.append(
+                    "ML modeli zayıf görünüm gösteriyor."
+                )
+
+            if context.technical_score >= 70:
+
+                explanation.append(
+                    "Teknik görünüm güçlü."
+                )
+
+            elif context.technical_score <= 40:
+
+                explanation.append(
+                    "Teknik görünüm zayıf."
+                )
+
+            if context.news_score >= 70:
+
+                explanation.append(
+                    "Haber akışı olumlu."
+                )
+
+            elif context.news_score <= 40:
+
+                explanation.append(
+                    "Haber akışı olumsuz."
+                )
+
+            if context.kap_score >= 70:
+
+                explanation.append(
+                    "KAP açıklamaları destekleyici."
+                )
+
+            if context.research_score >= 70:
+
+                explanation.append(
+                    "Araştırma raporları olumlu."
+                )
+
+            if context.risk_score <= 30:
+
+                risk = "LOW"
+
+            elif context.risk_score <= 60:
+
+                risk = "MEDIUM"
+
+            else:
+
+                risk = "HIGH"
+
             return {
 
                 "symbol": symbol,
 
                 "decision": decision["decision"],
 
-                "ai_score": decision["ai_score"],
+                "ai_score": round(
 
-                "confidence": 85,
+                    decision["ai_score"],
 
-                "ml_score": context.ml_score,
+                    2,
 
-                "technical_score": context.technical_score,
-
-                "research_score": context.research_score,
-
-                "news_score": context.news_score,
-
-                "kap_score": context.kap_score,
-
-                "consensus": context.consensus.get(
-                    "consensus",
-                    "UNKNOWN",
                 ),
 
-                "target_price": context.consensus.get(
+                "confidence": decision.get(
+
+                    "confidence",
+
+                    85,
+
+                ),
+
+                "ml_score": round(
+
+                    context.ml_score,
+
+                    2,
+
+                ),
+
+                "technical_score": round(
+
+                    context.technical_score,
+
+                    2,
+
+                ),
+
+                "news_score": round(
+
+                    context.news_score,
+
+                    2,
+
+                ),
+
+                "kap_score": round(
+
+                    context.kap_score,
+
+                    2,
+
+                ),
+
+                "research_score": round(
+
+                    context.research_score,
+
+                    2,
+
+                ),
+
+                "consensus": consensus.get(
+
+                    "market_view",
+
+                    consensus.get(
+
+                        "consensus",
+
+                        "NOTR",
+
+                    ),
+
+                ),
+
+                "consensus_score": consensus.get(
+
+                    "score",
+
+                    50,
+
+                ),
+
+                "consensus_summary": consensus.get(
+
+                    "summary",
+
+                    "",
+
+                ),
+
+                "target_price": consensus.get(
+
                     "average_target_price",
+
                 ),
 
-                "risk": (
-                    "LOW"
-                    if context.risk_score < 30
-                    else "MEDIUM"
+                "risk": risk,
+
+                "summary": " ".join(explanation),
+
+                "explanations": explanation,
+
+                "strengths": consensus.get(
+
+                    "strengths",
+
+                    [],
+
                 ),
 
-                "summary": "",
+                "risks": consensus.get(
+
+                    "risks",
+
+                    [],
+
+                ),
 
                 "sources": {
 

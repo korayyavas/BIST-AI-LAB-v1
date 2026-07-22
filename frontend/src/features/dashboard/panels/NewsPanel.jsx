@@ -10,6 +10,63 @@ import {
     Box,
 } from "@mui/material";
 
+function effectColor(effect) {
+
+    switch (effect) {
+
+        case "POZITIF":
+            return "success";
+
+        case "NEGATIF":
+            return "error";
+
+        default:
+            return "warning";
+
+    }
+
+}
+
+function sentimentColor(sentiment) {
+
+    switch (sentiment) {
+
+        case "POSITIVE":
+            return "success";
+
+        case "NEGATIVE":
+            return "error";
+
+        default:
+            return "warning";
+
+    }
+
+}
+
+function categoryColor(category) {
+
+    switch (category) {
+
+        case "COMPANY":
+            return "primary";
+
+        case "SECTOR":
+            return "success";
+
+        case "MACRO":
+            return "warning";
+
+        case "GEOPOLITICAL":
+            return "secondary";
+
+        default:
+            return "default";
+
+    }
+
+}
+
 export default function NewsPanel({
 
     news = [],
@@ -25,7 +82,7 @@ export default function NewsPanel({
             <Paper
                 sx={{
                     p: 2,
-                    height: 650,
+                    height: 700,
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
@@ -45,7 +102,7 @@ export default function NewsPanel({
         <Paper
             sx={{
                 p: 2,
-                height: 650,
+                height: 700,
                 overflow: "auto",
             }}
         >
@@ -56,6 +113,14 @@ export default function NewsPanel({
                 mb={2}
             >
                 📰 AI NEWS INTELLIGENCE
+            </Typography>
+
+            <Typography
+                variant="body2"
+                color="text.secondary"
+                mb={3}
+            >
+                AI önem puanına göre sıralanmış haberler
             </Typography>
 
             {news.length === 0 && (
@@ -74,7 +139,7 @@ export default function NewsPanel({
 
                     <Paper
                         key={index}
-                        elevation={2}
+                        elevation={3}
                         sx={{
                             p: 2,
                             borderRadius: 3,
@@ -85,47 +150,52 @@ export default function NewsPanel({
                             direction="row"
                             justifyContent="space-between"
                             alignItems="center"
-                            mb={1}
+                            flexWrap="wrap"
+                            spacing={1}
+                            mb={2}
                         >
 
-                            <Chip
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                flexWrap="wrap"
+                            >
 
-                                label={item.source}
+                                <Chip
 
-                                size="small"
+                                    label={item.source}
 
-                                color="primary"
+                                    color="primary"
 
-                            />
+                                    size="small"
+
+                                />
+
+                                <Chip
+
+                                    label={item.category || "OTHER"}
+
+                                    color={categoryColor(item.category)}
+
+                                    size="small"
+
+                                />
+
+                            </Stack>
 
                             <Chip
 
                                 label={item.market_effect}
 
-                                color={
-
-                                    item.market_effect === "POZITIF"
-
-                                        ? "success"
-
-                                        : item.market_effect === "NEGATIF"
-
-                                        ? "error"
-
-                                        : "warning"
-
-                                }
+                                color={effectColor(item.market_effect)}
 
                             />
 
                         </Stack>
 
                         <Typography
-
                             variant="h6"
-
                             fontWeight="bold"
-
                         >
 
                             {item.title_tr || item.title}
@@ -133,57 +203,77 @@ export default function NewsPanel({
                         </Typography>
 
                         <Typography
-
                             variant="body2"
-
                             color="text.secondary"
-
                             mt={1}
-
                         >
 
                             {item.summary}
 
                         </Typography>
 
+                        {(item.short_effect || item.long_effect) && (
+
+                            <>
+
+                                <Divider sx={{ my: 2 }} />
+
+                                <Typography
+                                    fontWeight="bold"
+                                    gutterBottom
+                                >
+                                    📈 Etki Analizi
+                                </Typography>
+
+                                {item.short_effect && (
+
+                                    <Typography variant="body2">
+
+                                        <b>Kısa Vade:</b> {item.short_effect}
+
+                                    </Typography>
+
+                                )}
+
+                                {item.long_effect && (
+
+                                    <Typography
+                                        variant="body2"
+                                        mt={1}
+                                    >
+
+                                        <b>Uzun Vade:</b> {item.long_effect}
+
+                                    </Typography>
+
+                                )}
+
+                            </>
+
+                        )}
+
                         <Divider sx={{ my: 2 }} />
 
                         <Typography
-
-                            variant="subtitle2"
-
                             fontWeight="bold"
-
+                            gutterBottom
                         >
-
                             🤖 AI Yorumu
-
                         </Typography>
 
-                        <Typography
+                        <Typography variant="body2">
 
-                            variant="body2"
-
-                            mt={1}
-
-                        >
-
-                            {item.ai_comment}
+                            {item.ai_comment || "AI yorumu bulunmuyor."}
 
                         </Typography>
 
                         <Divider sx={{ my: 2 }} />
 
                         <Stack
-
                             direction="row"
-
-                            spacing={2}
-
-                            alignItems="center"
-
+                            spacing={1}
                             flexWrap="wrap"
-
+                            alignItems="center"
                         >
 
                             <Rating
@@ -198,19 +288,7 @@ export default function NewsPanel({
 
                                 label={item.sentiment}
 
-                                color={
-
-                                    item.sentiment === "POSITIVE"
-
-                                        ? "success"
-
-                                        : item.sentiment === "NEGATIVE"
-
-                                        ? "error"
-
-                                        : "warning"
-
-                                }
+                                color={sentimentColor(item.sentiment)}
 
                             />
 
@@ -218,9 +296,21 @@ export default function NewsPanel({
 
                                 color="info"
 
-                                label={`AI Score ${item.score}`}
+                                label={`AI ${item.score}`}
 
                             />
+
+                            {item.relevance && (
+
+                                <Chip
+
+                                    color="secondary"
+
+                                    label={`İlgi ${item.relevance}`}
+
+                                />
+
+                            )}
 
                         </Stack>
 

@@ -1,16 +1,46 @@
+import { useMemo } from "react";
+
 import { useDashboardQuery } from "./query/dashboardQuery";
 
 const EMPTY_DATA = {
-    intelligence: null,
+
+    intelligence: {},
+
     news: [],
+
     research: [],
+
     kap: [],
+
+    topPicks: [],
+
+    version: {},
+
+    modules: {},
+
+    loadedAt: null,
+
     errors: {},
+
 };
 
-export function useDashboard(symbol) {
+export function useDashboard(symbol = "ASELS") {
 
     const query = useDashboardQuery(symbol);
+
+    const data = useMemo(
+
+        () => ({
+
+            ...EMPTY_DATA,
+
+            ...(query.data ?? {}),
+
+        }),
+
+        [query.data],
+
+    );
 
     return {
 
@@ -18,14 +48,29 @@ export function useDashboard(symbol) {
 
         fetching: query.isFetching,
 
+        success: query.isSuccess,
+
         error: query.error,
 
-        data: query.data ?? EMPTY_DATA,
+        data,
 
         reload: query.refetch,
 
-        lastUpdated:
-            query.data?.loadedAt ?? null,
+        lastUpdated: data.loadedAt,
+
+        intelligence: data.intelligence,
+
+        news: data.news,
+
+        research: data.research,
+
+        kap: data.kap,
+
+        topPicks: data.topPicks,
+
+        version: data.version,
+
+        modules: data.modules,
 
     };
 

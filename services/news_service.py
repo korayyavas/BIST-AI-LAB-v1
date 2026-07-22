@@ -1,6 +1,6 @@
 """
 News Service
-BIST AI LAB v9
+BIST AI LAB v10.0 Professional AI News Engine
 """
 
 from __future__ import annotations
@@ -13,24 +13,34 @@ from services.news_ai_service import NewsAIService
 
 
 SYMBOL_MAP = {
-    "ASELS.IS": "ASELSAN",
+
     "ASELS": "ASELSAN",
-    "THYAO.IS": "Turkish Airlines",
+    "ASELS.IS": "ASELSAN",
+
     "THYAO": "Turkish Airlines",
-    "KCHOL.IS": "Koç Holding",
+    "THYAO.IS": "Turkish Airlines",
+
     "KCHOL": "Koç Holding",
-    "SISE.IS": "Şişecam",
+    "KCHOL.IS": "Koç Holding",
+
     "SISE": "Şişecam",
-    "TUPRS.IS": "Tüpraş",
+    "SISE.IS": "Şişecam",
+
     "TUPRS": "Tüpraş",
-    "AKBNK.IS": "Akbank",
+    "TUPRS.IS": "Tüpraş",
+
     "AKBNK": "Akbank",
-    "GARAN.IS": "Garanti BBVA",
+    "AKBNK.IS": "Akbank",
+
     "GARAN": "Garanti BBVA",
-    "EREGL.IS": "Erdemir",
+    "GARAN.IS": "Garanti BBVA",
+
     "EREGL": "Erdemir",
-    "BIMAS.IS": "BİM",
+    "EREGL.IS": "Erdemir",
+
     "BIMAS": "BİM",
+    "BIMAS.IS": "BİM",
+
 }
 
 
@@ -57,6 +67,10 @@ class NewsResult:
 
     score: float
 
+    category: str
+
+    relevance: float
+
 
 class NewsService:
 
@@ -70,9 +84,137 @@ class NewsService:
 
     # =====================================================
 
+    def _category(self, title: str):
+
+        t = title.lower()
+
+        if any(
+
+            x in t
+
+            for x in [
+
+                "aselsan",
+
+                "thy",
+
+                "akbank",
+
+                "garan",
+
+                "koç",
+
+                "sisecam",
+
+                "şişecam",
+
+                "erdemir",
+
+                "tüpraş",
+
+                "bim",
+
+            ]
+
+        ):
+
+            return "COMPANY", 100
+
+        if any(
+
+            x in t
+
+            for x in [
+
+                "defense",
+
+                "savunma",
+
+                "bank",
+
+                "steel",
+
+                "energy",
+
+                "oil",
+
+                "drone",
+
+                "radar",
+
+                "air defense",
+
+                "market",
+
+            ]
+
+        ):
+
+            return "SECTOR", 85
+
+        if any(
+
+            x in t
+
+            for x in [
+
+                "fed",
+
+                "inflation",
+
+                "interest",
+
+                "economy",
+
+                "gdp",
+
+                "growth",
+
+            ]
+
+        ):
+
+            return "MACRO", 70
+
+        if any(
+
+            x in t
+
+            for x in [
+
+                "nato",
+
+                "war",
+
+                "ukraine",
+
+                "russia",
+
+                "china",
+
+                "iran",
+
+                "israel",
+
+            ]
+
+        ):
+
+            return "GEOPOLITICAL", 65
+
+        return "OTHER", 40
+
+    # =====================================================
+
     def get_news(self, symbol: str):
 
-        keyword = SYMBOL_MAP.get(symbol.upper(), symbol)
+        keyword = SYMBOL_MAP.get(
+
+            symbol.upper(),
+
+            symbol,
+
+        )
 
         print("=" * 80)
         print("NEWS SEARCH")
@@ -80,38 +222,101 @@ class NewsService:
         print("KEYWORD:", keyword)
 
         articles = self.provider.search(keyword)
+        titles = []
+        if index < len(ai_results):
+
+            ai = ai_results[index]
+
+        else:
+
+            ai = {}
+        for index, article in enumerate(articles):
+
+            title = article.get("title", "").strip()
+
+            if title:
+
+                titles.append(title)
+
+        ai_results = self.ai.analyze(titles)
 
         print("ARTICLE COUNT:", len(articles))
 
-        news = []
+        results = []
 
         for article in articles:
 
             try:
 
-                title = article.get("title", "").strip()
+                title = article.get(
+
+                    "title",
+
+                    "",
+
+                ).strip()
 
                 if not title:
+
                     continue
 
                 sentiment = self.sentiment.analyze(title)
 
-                ai = self.ai.analyze(title)
+                
 
-                source = article.get("source", {})
+                source = article.get(
+
+                    "source",
+
+                    {},
+
+                )
 
                 if isinstance(source, dict):
 
                     source_name = source.get(
+
                         "name",
+
                         "Unknown",
+
                     )
 
                 else:
 
                     source_name = str(source)
 
-                news.append(
+                category, relevance = self._category(title)
+
+                score = float(
+
+                    sentiment.get(
+
+                        "score",
+
+                        50,
+
+                    )
+
+                )
+
+                score = (
+
+                    score * 0.50
+
+                    + relevance * 0.30
+
+                    + ai.get(
+
+                        "importance",
+
+                        3,
+
+                    ) * 20 * 0.20
+
+                )
+
+                results.append(
 
                     NewsResult(
 
@@ -119,24 +324,77 @@ class NewsService:
 
                         title=title,
 
-                        title_tr=ai["title_tr"],
+                        title_tr=ai.get(
 
-                        summary=ai["summary"],
+                            "title_tr",
 
-                        market_effect=ai["market_effect"],
+                            title,
 
-                        importance=ai["importance"],
-
-                        ai_comment=ai["ai_comment"],
-
-                        url=article.get(
-                            "url",
-                            "",
                         ),
 
-                        sentiment=sentiment["sentiment"],
+                        summary=ai.get(
 
-                        score=sentiment["score"],
+                            "summary",
+
+                            "",
+
+                        ),
+
+                        market_effect=ai.get(
+
+                            "market_effect",
+
+                            "NOTR",
+
+                        ),
+
+                        importance=int(
+
+                            ai.get(
+
+                                "importance",
+
+                                3,
+
+                            )
+
+                        ),
+
+                        ai_comment=ai.get(
+
+                            "ai_comment",
+
+                            "",
+
+                        ),
+
+                        url=article.get(
+
+                            "url",
+
+                            "",
+
+                        ),
+
+                        sentiment=sentiment.get(
+
+                            "sentiment",
+
+                            "NEUTRAL",
+
+                        ),
+
+                        score=round(
+
+                            score,
+
+                            2,
+
+                        ),
+
+                        category=category,
+
+                        relevance=relevance,
 
                     )
 
@@ -144,12 +402,46 @@ class NewsService:
 
             except Exception as e:
 
+                import traceback
+
                 print("=" * 80)
                 print("NEWS ERROR")
                 print(e)
+                traceback.print_exc()
                 print("=" * 80)
 
-        print("FINAL NEWS:", len(news))
-        print("=" * 80)
+        results.sort(
 
-        return news
+            key=lambda x: (
+
+                x.relevance,
+
+                x.importance,
+
+                x.score,
+
+            ),
+
+            reverse=True,
+
+        )
+
+        filtered = []
+
+        titles = set()
+
+        for item in results:
+
+            key = item.title.lower()
+
+            if key in titles:
+
+                continue
+
+            titles.add(key)
+
+            filtered.append(item)
+
+        print("FINAL NEWS:", len(filtered))
+
+        return filtered
