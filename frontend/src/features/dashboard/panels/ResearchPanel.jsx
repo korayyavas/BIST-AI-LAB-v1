@@ -1,96 +1,116 @@
 import {
-
     Paper,
     Typography,
     Stack,
-    Chip
-
+    Chip,
+    CircularProgress,
+    Divider,
 } from "@mui/material";
 
-import { useEffect,useState } from "react";
+export default function ResearchPanel({
 
-import axios from "../../../api/api";
+    reports = [],
 
-export default function ResearchPanel(){
+    loading = false,
 
-    const [reports,setReports]=useState([]);
+}) {
 
-    useEffect(()=>{
+    if (loading) {
 
-        load();
+        return (
 
-    },[]);
+            <Paper
+                sx={{
+                    p: 2,
+                    height: 340,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
 
-    async function load(){
+                <CircularProgress />
 
-        const res=await axios.post(
-
-            "/research",
-
-            {
-
-                symbol:"ASELS"
-
-            }
+            </Paper>
 
         );
 
-        setReports(res.data.reports||[]);
-
     }
 
-    return(
+    return (
 
-        <Paper sx={{p:2,height:340,overflow:"auto"}}>
+        <Paper
+            sx={{
+                p: 2,
+                height: 340,
+                overflow: "auto",
+            }}
+        >
 
-            <Typography variant="h6" mb={2}>
-
+            <Typography
+                variant="h6"
+                mb={2}
+            >
                 Research
-
             </Typography>
+
+            {
+
+                reports.length === 0 && (
+
+                    <Typography color="text.secondary">
+
+                        Araştırma raporu bulunamadı.
+
+                    </Typography>
+
+                )
+
+            }
 
             <Stack spacing={2}>
 
                 {
 
-                    reports.map((r,i)=>(
+                    reports.map((item, index) => (
 
-                        <Paper key={i} sx={{p:2}}>
+                        <Paper
+                            key={index}
+                            variant="outlined"
+                            sx={{ p: 2 }}
+                        >
 
-                            <Typography fontWeight={700}>
-
-                                {r.broker}
-
+                            <Typography
+                                fontWeight={700}
+                            >
+                                {item.broker}
                             </Typography>
 
+                            <Divider sx={{ my: 1 }} />
+
                             <Chip
-
-                                label={r.recommendation}
-
+                                label={item.recommendation ?? "HOLD"}
                                 color={
-
-                                    r.recommendation==="BUY"
-
-                                    ?"success"
-
-                                    :"warning"
-
+                                    item.recommendation === "BUY"
+                                        ? "success"
+                                        : item.recommendation === "SELL"
+                                        ? "error"
+                                        : "warning"
                                 }
-
-                                sx={{mt:1}}
-
                             />
 
                             <Typography mt={2}>
-
-                                Target ₺ {r.target_price}
-
+                                Target :
+                                {" "}
+                                ₺
+                                {item.target_price ?? "-"}
                             </Typography>
 
-                            <Typography variant="body2">
-
-                                {r.summary}
-
+                            <Typography
+                                variant="body2"
+                                mt={1}
+                            >
+                                {item.summary}
                             </Typography>
 
                         </Paper>

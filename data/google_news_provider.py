@@ -22,6 +22,12 @@ class GoogleNewsProvider(NewsProvider):
             timeout=30,
         )
 
+        print("=" * 80)
+        print("KEYWORD:", keyword)
+        print("STATUS:", response.status_code)
+        print(response.text)
+        print("=" * 80)
+
         response.raise_for_status()
 
         data = response.json()

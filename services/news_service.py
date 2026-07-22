@@ -1,28 +1,36 @@
 """
 News Service
-BIST AI LAB v8
+BIST AI LAB v9
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from core.cache_manager import CacheManager
-
 from data.google_news_provider import GoogleNewsProvider
 from services.sentiment_service import SentimentService
+from services.news_ai_service import NewsAIService
 
 
 SYMBOL_MAP = {
     "ASELS.IS": "ASELSAN",
+    "ASELS": "ASELSAN",
     "THYAO.IS": "Turkish Airlines",
+    "THYAO": "Turkish Airlines",
     "KCHOL.IS": "Koç Holding",
+    "KCHOL": "Koç Holding",
     "SISE.IS": "Şişecam",
+    "SISE": "Şişecam",
     "TUPRS.IS": "Tüpraş",
+    "TUPRS": "Tüpraş",
     "AKBNK.IS": "Akbank",
+    "AKBNK": "Akbank",
     "GARAN.IS": "Garanti BBVA",
+    "GARAN": "Garanti BBVA",
     "EREGL.IS": "Erdemir",
+    "EREGL": "Erdemir",
     "BIMAS.IS": "BİM",
+    "BIMAS": "BİM",
 }
 
 
@@ -32,6 +40,16 @@ class NewsResult:
     source: str
 
     title: str
+
+    title_tr: str
+
+    summary: str
+
+    market_effect: str
+
+    importance: int
+
+    ai_comment: str
 
     url: str
 
@@ -48,25 +66,37 @@ class NewsService:
 
         self.sentiment = SentimentService()
 
-        self.cache = CacheManager()
+        self.ai = NewsAIService()
 
     # =====================================================
 
     def get_news(self, symbol: str):
 
-        def producer():
+        keyword = SYMBOL_MAP.get(symbol.upper(), symbol)
 
-            keyword = SYMBOL_MAP.get(symbol, symbol)
+        print("=" * 80)
+        print("NEWS SEARCH")
+        print("SYMBOL :", symbol)
+        print("KEYWORD:", keyword)
 
-            articles = self.provider.search(keyword)
+        articles = self.provider.search(keyword)
 
-            news = []
+        print("ARTICLE COUNT:", len(articles))
 
-            for article in articles:
+        news = []
 
-                title = article.get("title", "")
+        for article in articles:
 
-                analysis = self.sentiment.analyze(title)
+            try:
+
+                title = article.get("title", "").strip()
+
+                if not title:
+                    continue
+
+                sentiment = self.sentiment.analyze(title)
+
+                ai = self.ai.analyze(title)
 
                 source = article.get("source", {})
 
@@ -79,7 +109,7 @@ class NewsService:
 
                 else:
 
-                    source_name = "Unknown"
+                    source_name = str(source)
 
                 news.append(
 
@@ -89,39 +119,37 @@ class NewsService:
 
                         title=title,
 
+                        title_tr=ai["title_tr"],
+
+                        summary=ai["summary"],
+
+                        market_effect=ai["market_effect"],
+
+                        importance=ai["importance"],
+
+                        ai_comment=ai["ai_comment"],
+
                         url=article.get(
                             "url",
                             "",
                         ),
 
-                        sentiment=analysis["sentiment"],
+                        sentiment=sentiment["sentiment"],
 
-                        score=analysis["score"],
+                        score=sentiment["score"],
 
                     )
 
                 )
 
-            return [
+            except Exception as e:
 
-                item.__dict__
+                print("=" * 80)
+                print("NEWS ERROR")
+                print(e)
+                print("=" * 80)
 
-                for item in news
+        print("FINAL NEWS:", len(news))
+        print("=" * 80)
 
-            ]
-
-        cached = self.cache.get(
-
-            f"news_{symbol}",
-
-            producer,
-
-        )
-
-        return [
-
-            NewsResult(**item)
-
-            for item in cached
-
-        ]
+        return news

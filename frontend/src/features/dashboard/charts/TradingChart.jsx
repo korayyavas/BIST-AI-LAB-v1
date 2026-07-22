@@ -1,22 +1,20 @@
 import { lazy, Suspense } from "react";
-
 import {
+    Paper,
     Box,
     CircularProgress,
 } from "@mui/material";
 
-const EChart = lazy(() =>
-    import("echarts-for-react")
-);
+const EChart = lazy(() => import("echarts-for-react"));
 
-function ChartLoading() {
+function Loading() {
     return (
         <Box
             sx={{
                 height: 420,
                 display: "flex",
-                alignItems: "center",
                 justifyContent: "center",
+                alignItems: "center",
             }}
         >
             <CircularProgress />
@@ -24,10 +22,19 @@ function ChartLoading() {
     );
 }
 
-export default function TradingChart(props) {
+export default function TradingChart() {
 
     const option = {
-        animation: true,
+
+        title: {
+            text: "ASELS",
+            left: "center",
+            textStyle: {
+                color: "#fff",
+            },
+        },
+
+        backgroundColor: "#11161d",
 
         tooltip: {
             trigger: "axis",
@@ -35,32 +42,55 @@ export default function TradingChart(props) {
 
         xAxis: {
             type: "category",
-            data: [],
+            boundaryGap: false,
+            data: [
+                "Pzt",
+                "Sal",
+                "Çar",
+                "Per",
+                "Cum",
+            ],
         },
 
         yAxis: {
             type: "value",
         },
 
-        series: [],
+        series: [
+            {
+                name: "Fiyat",
+                type: "line",
+                smooth: true,
+                areaStyle: {},
+                data: [
+                    112,
+                    114,
+                    113,
+                    118,
+                    121,
+                ],
+            },
+        ],
+
     };
 
     return (
 
-        <Suspense
-            fallback={<ChartLoading />}
-        >
+        <Paper sx={{ p: 2 }}>
 
-            <EChart
-                option={option}
-                style={{
-                    width: "100%",
-                    height: 420,
-                }}
-                {...props}
-            />
+            <Suspense fallback={<Loading />}>
 
-        </Suspense>
+                <EChart
+                    option={option}
+                    style={{
+                        width: "100%",
+                        height: 420,
+                    }}
+                />
+
+            </Suspense>
+
+        </Paper>
 
     );
 

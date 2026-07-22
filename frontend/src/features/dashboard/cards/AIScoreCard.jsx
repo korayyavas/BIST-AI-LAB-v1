@@ -1,99 +1,88 @@
 import {
-
     Paper,
     Typography,
     Box,
     CircularProgress,
     Stack,
-    Chip
-
+    Chip,
+    Divider,
 } from "@mui/material";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { useEffect,useState } from "react";
+export default function AIScoreCard({
 
-import { getIntelligence } from "../../../services/intelligenceApi";
+    loading = false,
 
-export default function AIScoreCard(){
+    data = {},
 
-    const [data,setData]=useState(null);
+}) {
 
-    useEffect(() => {
-        load();
-    }, []);
+    if (loading) {
 
-    const load = async () => {
-        try {
-            const result = await getIntelligence("ASELS");
-
-            console.log("AI RESULT:", result);
-
-            setData(result);
-
-        } catch (err) {
-
-            console.error("AI ERROR:", err);
-
-        }
-    };
-
-    if(!data)
-
-        return(
+        return (
 
             <Paper
                 sx={{
-                    height:340,
-                    display:"flex",
-                    justifyContent:"center",
-                    alignItems:"center"
+                    height: 420,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                 }}
             >
 
-                <CircularProgress/>
+                <CircularProgress />
 
             </Paper>
 
         );
 
-    let color="#ffc107";
+    }
 
-    let icon=<RemoveIcon/>;
+    const score = Number(data?.score ?? 0);
 
-    if(data.decision.includes("BUY")){
+    const recommendation = data?.recommendation ?? "HOLD";
 
-        color="#00e676";
+    const confidence = Number(data?.confidence ?? 0);
 
-        icon=<TrendingUpIcon/>;
+    const strengths = data?.strengths ?? [];
+
+    const weaknesses = data?.weaknesses ?? [];
+
+    let color = "#FFC107";
+    let icon = <RemoveIcon />;
+
+    if (recommendation.includes("BUY")) {
+
+        color = "#00C853";
+        icon = <TrendingUpIcon />;
 
     }
 
-    if(data.decision.includes("SELL")){
+    if (recommendation.includes("SELL")) {
 
-        color="#ff5252";
-
-        icon=<TrendingDownIcon/>;
+        color = "#F44336";
+        icon = <TrendingDownIcon />;
 
     }
 
-    return(
+    return (
 
         <Paper
 
             sx={{
 
-                p:4,
+                p: 3,
 
-                height:340,
+                height: 420,
 
-                background:"#11161d",
+                background: "#10151d",
 
-                border:"1px solid #243041",
+                border: "1px solid #243041",
 
-                borderRadius:4
+                borderRadius: 4,
 
             }}
 
@@ -101,9 +90,9 @@ export default function AIScoreCard(){
 
             <Stack
 
-                alignItems="center"
-
                 spacing={2}
+
+                alignItems="center"
 
             >
 
@@ -111,9 +100,11 @@ export default function AIScoreCard(){
 
                     variant="h5"
 
+                    fontWeight={700}
+
                 >
 
-                    AI SCORE
+                    🤖 AI INTELLIGENCE
 
                 </Typography>
 
@@ -121,9 +112,9 @@ export default function AIScoreCard(){
 
                     sx={{
 
-                        position:"relative",
+                        position: "relative",
 
-                        display:"inline-flex"
+                        display: "inline-flex",
 
                     }}
 
@@ -135,15 +126,15 @@ export default function AIScoreCard(){
 
                         value={100}
 
-                        size={180}
+                        size={170}
 
                         thickness={2}
 
                         sx={{
 
-                            color:"#1f2937",
+                            color: "#263238",
 
-                            position:"absolute"
+                            position: "absolute",
 
                         }}
 
@@ -153,15 +144,15 @@ export default function AIScoreCard(){
 
                         variant="determinate"
 
-                        value={data.ai_score}
+                        value={score}
 
-                        size={180}
+                        size={170}
 
-                        thickness={5}
+                        thickness={6}
 
                         sx={{
 
-                            color
+                            color,
 
                         }}
 
@@ -171,23 +162,17 @@ export default function AIScoreCard(){
 
                         sx={{
 
-                            top:0,
+                            inset: 0,
 
-                            left:0,
+                            position: "absolute",
 
-                            bottom:0,
+                            display: "flex",
 
-                            right:0,
+                            flexDirection: "column",
 
-                            position:"absolute",
+                            justifyContent: "center",
 
-                            display:"flex",
-
-                            alignItems:"center",
-
-                            justifyContent:"center",
-
-                            flexDirection:"column"
+                            alignItems: "center",
 
                         }}
 
@@ -201,13 +186,13 @@ export default function AIScoreCard(){
 
                         >
 
-                            {data.ai_score}
+                            {score.toFixed(1)}
 
                         </Typography>
 
                         <Typography>
 
-                            {data.symbol}
+                            AI SCORE
 
                         </Typography>
 
@@ -219,15 +204,15 @@ export default function AIScoreCard(){
 
                     icon={icon}
 
-                    label={data.decision}
+                    label={recommendation}
 
                     sx={{
 
-                        bgcolor:color,
+                        bgcolor: color,
 
-                        color:"white",
+                        color: "#fff",
 
-                        fontWeight:700
+                        fontWeight: 700,
 
                     }}
 
@@ -235,9 +220,135 @@ export default function AIScoreCard(){
 
                 <Typography>
 
-                    Confidence {data.confidence}%
+                    Confidence : {confidence.toFixed(1)}%
 
                 </Typography>
+
+                <Divider flexItem />
+
+                <Box width="100%">
+
+                    <Typography
+
+                        variant="subtitle2"
+
+                        gutterBottom
+
+                    >
+
+                        ✅ Güçlü Yönler
+
+                    </Typography>
+
+                    <Stack
+
+                        direction="row"
+
+                        spacing={1}
+
+                        flexWrap="wrap"
+
+                    >
+
+                        {
+
+                            strengths.length === 0
+
+                                ?
+
+                                <Chip
+
+                                    size="small"
+
+                                    label="-"
+
+                                />
+
+                                :
+
+                                strengths.map((item) => (
+
+                                    <Chip
+
+                                        key={item}
+
+                                        size="small"
+
+                                        color="success"
+
+                                        label={item}
+
+                                    />
+
+                                ))
+
+                        }
+
+                    </Stack>
+
+                </Box>
+
+                <Box width="100%">
+
+                    <Typography
+
+                        variant="subtitle2"
+
+                        gutterBottom
+
+                    >
+
+                        ⚠ Riskler
+
+                    </Typography>
+
+                    <Stack
+
+                        direction="row"
+
+                        spacing={1}
+
+                        flexWrap="wrap"
+
+                    >
+
+                        {
+
+                            weaknesses.length === 0
+
+                                ?
+
+                                <Chip
+
+                                    size="small"
+
+                                    label="-"
+
+                                />
+
+                                :
+
+                                weaknesses.map((item) => (
+
+                                    <Chip
+
+                                        key={item}
+
+                                        size="small"
+
+                                        color="warning"
+
+                                        label={item}
+
+                                    />
+
+                                ))
+
+                        }
+
+                    </Stack>
+
+                </Box>
 
             </Stack>
 

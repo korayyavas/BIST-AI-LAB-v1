@@ -1,94 +1,101 @@
 import {
-
     Paper,
-
     Grid,
-
-    Typography
-
+    Typography,
+    Chip,
+    Stack,
 } from "@mui/material";
 
-export default function StatusBar(){
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import MemoryIcon from "@mui/icons-material/Memory";
+import StorageIcon from "@mui/icons-material/Storage";
+import PsychologyIcon from "@mui/icons-material/Psychology";
 
-    return(
+export default function StatusBar() {
+
+    return (
 
         <Paper
-
             sx={{
-
-                p:2,
-
-                bgcolor:"#11161d",
-
-                border:"1px solid #26313d"
-
+                mt: 2,
+                p: 2,
+                bgcolor: "#10151d",
+                border: "1px solid #243041",
+                borderRadius: 3,
             }}
-
         >
 
-            <Grid container>
+            <Grid container spacing={2}>
 
-                <Grid item xs={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
 
-                    <Typography>
+                    <Stack spacing={1}>
 
-                        Backend
+                        <Typography variant="caption">
+                            Backend
+                        </Typography>
 
-                    </Typography>
+                        <Chip
+                            icon={<CheckCircleIcon />}
+                            label="ONLINE"
+                            color="success"
+                        />
 
-                    <Typography color="#00e676">
-
-                        ● Connected
-
-                    </Typography>
-
-                </Grid>
-
-                <Grid item xs={3}>
-
-                    <Typography>
-
-                        AI Engine
-
-                    </Typography>
-
-                    <Typography>
-
-                        Gemini + ML
-
-                    </Typography>
+                    </Stack>
 
                 </Grid>
 
-                <Grid item xs={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
 
-                    <Typography>
+                    <Stack spacing={1}>
 
-                        Cache
+                        <Typography variant="caption">
+                            Intelligence Engine
+                        </Typography>
 
-                    </Typography>
+                        <Chip
+                            icon={<PsychologyIcon />}
+                            label="ACTIVE"
+                            color="primary"
+                        />
 
-                    <Typography>
-
-                        Enabled
-
-                    </Typography>
+                    </Stack>
 
                 </Grid>
 
-                <Grid item xs={3}>
+                <Grid size={{ xs: 12, md: 3 }}>
 
-                    <Typography>
+                    <Stack spacing={1}>
 
-                        Version
+                        <Typography variant="caption">
+                            Cache
+                        </Typography>
 
-                    </Typography>
+                        <Chip
+                            icon={<StorageIcon />}
+                            label="ENABLED"
+                            color="success"
+                        />
 
-                    <Typography>
+                    </Stack>
 
-                        BIST AI LAB v7
+                </Grid>
 
-                    </Typography>
+                <Grid size={{ xs: 12, md: 3 }}>
+
+                    <Stack spacing={1}>
+
+                        <Typography variant="caption">
+                            Version
+                        </Typography>
+
+                        <Chip
+                            icon={<MemoryIcon />}
+                            label="BIST AI LAB v9"
+                            color="info"
+                        />
+
+                    </Stack>
 
                 </Grid>
 

@@ -4,7 +4,8 @@ import {
     Stack,
     Chip,
     Box,
-    CircularProgress
+    CircularProgress,
+    LinearProgress,
 } from "@mui/material";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -15,43 +16,57 @@ import { useEffect, useState } from "react";
 
 import axios from "../../../api/api";
 
-export default function PortfolioPanel(){
+export default function PortfolioPanel() {
 
-    const [items,setItems]=useState([]);
+    const [items, setItems] = useState([]);
 
-    const [loading,setLoading]=useState(true);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(()=>{
+    useEffect(() => {
 
         load();
 
-    },[]);
+    }, []);
 
-    async function load(){
+    async function load() {
 
-        try{
+        setLoading(true);
 
-            const res=await axios.post(
+        try {
+
+            const res = await axios.post(
 
                 "/top-picks",
 
                 {
 
-                    top:10,
+                    top: 10,
 
-                    signal:"ALL",
+                    signal: "ALL",
 
-                    min_confidence:0
+                    min_confidence: 0,
 
                 }
 
             );
 
-            setItems(res.data.top_picks||[]);
+            setItems(
+
+                res.data.top_picks ?? []
+
+            );
 
         }
 
-        finally{
+        catch (e) {
+
+            console.error(e);
+
+            setItems([]);
+
+        }
+
+        finally {
 
             setLoading(false);
 
@@ -59,103 +74,241 @@ export default function PortfolioPanel(){
 
     }
 
-    if(loading)
+    if (loading) {
 
-        return(
+        return (
 
-            <Paper sx={{height:340,display:"flex",justifyContent:"center",alignItems:"center"}}>
+            <Paper
 
-                <CircularProgress/>
+                sx={{
+
+                    height: 420,
+
+                    display: "flex",
+
+                    justifyContent: "center",
+
+                    alignItems: "center",
+
+                }}
+
+            >
+
+                <CircularProgress />
 
             </Paper>
 
         );
 
-    return(
+    }
 
-        <Paper sx={{p:2,height:340}}>
+    return (
 
-            <Typography variant="h6" mb={2}>
+        <Paper
 
-                Watchlist
+            sx={{
+
+                p: 2,
+
+                height: 420,
+
+                overflow: "auto",
+
+                bgcolor: "#10151d",
+
+                border: "1px solid #243041",
+
+                borderRadius: 4,
+
+            }}
+
+        >
+
+            <Typography
+
+                variant="h6"
+
+                fontWeight={700}
+
+                mb={2}
+
+            >
+
+                📈 AI WATCHLIST
 
             </Typography>
 
-            <Stack spacing={1}>
+            {
+
+                items.length === 0 && (
+
+                    <Typography>
+
+                        Veri bulunamadı.
+
+                    </Typography>
+
+                )
+
+            }
+
+            <Stack spacing={2}>
 
                 {
 
-                    items.map((x,i)=>{
+                    items.map((item) => {
 
-                        let color="warning";
+                        let color = "warning";
 
-                        let icon=<RemoveIcon/>;
+                        let icon = <RemoveIcon />;
 
-                        if(x.signal?.includes("BUY")){
+                        if ((item.signal ?? "").includes("BUY")) {
 
-                            color="success";
+                            color = "success";
 
-                            icon=<TrendingUpIcon/>;
-
-                        }
-
-                        if(x.signal?.includes("SELL")){
-
-                            color="error";
-
-                            icon=<TrendingDownIcon/>;
+                            icon = <TrendingUpIcon />;
 
                         }
 
-                        return(
+                        if ((item.signal ?? "").includes("SELL")) {
 
-                            <Box
+                            color = "error";
 
-                                key={i}
+                            icon = <TrendingDownIcon />;
+
+                        }
+
+                        return (
+
+                            <Paper
+
+                                key={item.symbol}
+
+                                variant="outlined"
 
                                 sx={{
 
-                                    display:"flex",
+                                    p: 2,
 
-                                    justifyContent:"space-between",
+                                    bgcolor: "#161d28",
 
-                                    alignItems:"center",
-
-                                    p:1,
-
-                                    borderBottom:"1px solid #222"
+                                    borderRadius: 2,
 
                                 }}
 
                             >
 
-                                <Box>
+                                <Box
 
-                                    <Typography fontWeight={700}>
+                                    display="flex"
 
-                                        {x.symbol}
+                                    justifyContent="space-between"
 
-                                    </Typography>
+                                    alignItems="center"
 
-                                    <Typography variant="caption">
+                                >
 
-                                        {Math.round(x.confidence)}%
+                                    <Box>
 
-                                    </Typography>
+                                        <Typography
+
+                                            fontWeight={700}
+
+                                        >
+
+                                            {item.symbol}
+
+                                        </Typography>
+
+                                        <Typography
+
+                                            variant="caption"
+
+                                        >
+
+                                            {item.current_price} ₺
+
+                                        </Typography>
+
+                                    </Box>
+
+                                    <Chip
+
+                                        icon={icon}
+
+                                        color={color}
+
+                                        label={item.signal}
+
+                                    />
 
                                 </Box>
 
-                                <Chip
+                                <Box mt={2}>
 
-                                    icon={icon}
+                                    <Typography
 
-                                    label={x.signal}
+                                        variant="caption"
 
-                                    color={color}
+                                    >
 
-                                />
+                                        Confidence {Number(item.confidence).toFixed(1)}%
 
-                            </Box>
+                                    </Typography>
+
+                                    <LinearProgress
+
+                                        variant="determinate"
+
+                                        value={item.confidence}
+
+                                        sx={{
+
+                                            mt: 0.5,
+
+                                            height: 8,
+
+                                            borderRadius: 10,
+
+                                        }}
+
+                                    />
+
+                                </Box>
+
+                                <Stack
+
+                                    direction="row"
+
+                                    spacing={1}
+
+                                    mt={2}
+
+                                    flexWrap="wrap"
+
+                                >
+
+                                    <Chip
+
+                                        size="small"
+
+                                        label={`Risk ${item.risk_score}`}
+
+                                    />
+
+                                    <Chip
+
+                                        size="small"
+
+                                        color="primary"
+
+                                        label={`Top ${item.top_score}`}
+
+                                    />
+
+                                </Stack>
+
+                            </Paper>
 
                         );
 

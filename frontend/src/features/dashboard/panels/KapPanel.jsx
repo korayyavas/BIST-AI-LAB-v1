@@ -1,89 +1,103 @@
 import {
-
     Paper,
     Typography,
-    Stack
-
+    Stack,
+    Chip,
+    CircularProgress,
+    Divider,
 } from "@mui/material";
 
-import { useEffect,useState } from "react";
+export default function KapPanel({
 
-import axios from "../../../api/api";
+    events = [],
 
-export default function KapPanel(){
+    loading = false,
 
-    const [items,setItems]=useState([]);
+}) {
 
-    useEffect(()=>{
+    if (loading) {
 
-        load();
+        return (
 
-    },[]);
+            <Paper
+                sx={{
+                    p: 2,
+                    height: 420,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
 
-    async function load(){
+                <CircularProgress />
 
-        try{
+            </Paper>
 
-            const res=await axios.post(
-
-                "/kap",
-
-                {
-
-                    symbol:"ASELS"
-
-                }
-
-            );
-
-            setItems(
-
-                res.data.events ||
-
-                res.data.kap ||
-
-                []
-
-            );
-
-        }
-
-        catch{
-
-            setItems([]);
-
-        }
+        );
 
     }
 
-    return(
+    return (
 
-        <Paper sx={{p:2,height:420,overflow:"auto"}}>
+        <Paper
+            sx={{
+                p: 2,
+                height: 420,
+                overflow: "auto",
+            }}
+        >
 
-            <Typography variant="h6" mb={2}>
-
+            <Typography
+                variant="h6"
+                mb={2}
+            >
                 KAP Timeline
-
             </Typography>
+
+            {
+
+                events.length === 0 && (
+
+                    <Typography color="text.secondary">
+
+                        KAP bildirimi bulunamadı.
+
+                    </Typography>
+
+                )
+
+            }
 
             <Stack spacing={2}>
 
                 {
 
-                    items.map((k,i)=>(
+                    events.map((item, index) => (
 
-                        <Paper key={i} sx={{p:2}}>
+                        <Paper
+                            key={index}
+                            variant="outlined"
+                            sx={{ p: 2 }}
+                        >
 
-                            <Typography fontWeight={700}>
-
-                                {k.title}
-
+                            <Typography
+                                fontWeight={700}
+                            >
+                                {item.title}
                             </Typography>
 
-                            <Typography variant="body2">
+                            <Divider sx={{ my: 1 }} />
 
-                                {k.event_type}
+                            <Chip
+                                size="small"
+                                label={item.event_type ?? "INFO"}
+                            />
 
+                            <Typography
+                                variant="body2"
+                                mt={1}
+                            >
+                                Score : {item.score ?? "-"}
                             </Typography>
 
                         </Paper>

@@ -1,87 +1,250 @@
 import {
-
     Paper,
     Typography,
     Stack,
-    Chip
-
+    Chip,
+    CircularProgress,
+    Divider,
+    Link,
+    Rating,
+    Box,
 } from "@mui/material";
 
-import { useEffect,useState } from "react";
+export default function NewsPanel({
 
-import axios from "../../../api/api";
+    news = [],
 
-export default function NewsPanel(){
+    loading = false,
 
-    const [news,setNews]=useState([]);
+}) {
 
-    useEffect(()=>{
+    if (loading) {
 
-        load();
+        return (
 
-    },[]);
+            <Paper
+                sx={{
+                    p: 2,
+                    height: 650,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
 
-    async function load(){
+                <CircularProgress />
 
-        const res=await axios.post(
-
-            "/news",
-
-            {
-
-                symbol:"ASELS"
-
-            }
+            </Paper>
 
         );
 
-        setNews(res.data.news||[]);
-
     }
 
-    return(
+    return (
 
-        <Paper sx={{p:2,height:340,overflow:"auto"}}>
+        <Paper
+            sx={{
+                p: 2,
+                height: 650,
+                overflow: "auto",
+            }}
+        >
 
-            <Typography variant="h6" mb={2}>
-
-                Live News
-
+            <Typography
+                variant="h5"
+                fontWeight="bold"
+                mb={2}
+            >
+                📰 AI NEWS INTELLIGENCE
             </Typography>
+
+            {news.length === 0 && (
+
+                <Typography color="text.secondary">
+
+                    Haber bulunamadı.
+
+                </Typography>
+
+            )}
 
             <Stack spacing={2}>
 
-                {
+                {news.map((item, index) => (
 
-                    news.map((n,i)=>(
+                    <Paper
+                        key={index}
+                        elevation={2}
+                        sx={{
+                            p: 2,
+                            borderRadius: 3,
+                        }}
+                    >
 
-                        <Paper
-
-                            key={i}
-
-                            sx={{p:2}}
-
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mb={1}
                         >
 
                             <Chip
 
+                                label={item.source}
+
                                 size="small"
 
-                                label={n.source}
+                                color="primary"
 
                             />
 
-                            <Typography mt={1}>
+                            <Chip
 
-                                {n.title}
+                                label={item.market_effect}
 
-                            </Typography>
+                                color={
 
-                        </Paper>
+                                    item.market_effect === "POZITIF"
 
-                    ))
+                                        ? "success"
 
-                }
+                                        : item.market_effect === "NEGATIF"
+
+                                        ? "error"
+
+                                        : "warning"
+
+                                }
+
+                            />
+
+                        </Stack>
+
+                        <Typography
+
+                            variant="h6"
+
+                            fontWeight="bold"
+
+                        >
+
+                            {item.title_tr || item.title}
+
+                        </Typography>
+
+                        <Typography
+
+                            variant="body2"
+
+                            color="text.secondary"
+
+                            mt={1}
+
+                        >
+
+                            {item.summary}
+
+                        </Typography>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Typography
+
+                            variant="subtitle2"
+
+                            fontWeight="bold"
+
+                        >
+
+                            🤖 AI Yorumu
+
+                        </Typography>
+
+                        <Typography
+
+                            variant="body2"
+
+                            mt={1}
+
+                        >
+
+                            {item.ai_comment}
+
+                        </Typography>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Stack
+
+                            direction="row"
+
+                            spacing={2}
+
+                            alignItems="center"
+
+                            flexWrap="wrap"
+
+                        >
+
+                            <Rating
+
+                                value={item.importance}
+
+                                readOnly
+
+                            />
+
+                            <Chip
+
+                                label={item.sentiment}
+
+                                color={
+
+                                    item.sentiment === "POSITIVE"
+
+                                        ? "success"
+
+                                        : item.sentiment === "NEGATIVE"
+
+                                        ? "error"
+
+                                        : "warning"
+
+                                }
+
+                            />
+
+                            <Chip
+
+                                color="info"
+
+                                label={`AI Score ${item.score}`}
+
+                            />
+
+                        </Stack>
+
+                        <Box mt={2}>
+
+                            <Link
+
+                                href={item.url}
+
+                                target="_blank"
+
+                                underline="hover"
+
+                            >
+
+                                🔗 Orijinal Haberi Oku
+
+                            </Link>
+
+                        </Box>
+
+                    </Paper>
+
+                ))}
 
             </Stack>
 

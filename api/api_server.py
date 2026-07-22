@@ -42,7 +42,7 @@ startup.boot()
 
 app = FastAPI(
     title="BIST AI LAB API",
-    version="7.0.0",
+    version="9.0.0",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -95,7 +95,7 @@ def root():
 
     return {
         "application": "BIST AI LAB",
-        "version": "7.0.0",
+        "version": "9.0.0",
         "status": "running",
     }
 
@@ -156,28 +156,6 @@ def scan(req: ScanRequest):
     }
 
 
-# ============================================================
-# Top Picks
-# ============================================================
-
-@app.post("/top-picks")
-def top_picks(req: TopPicksRequest):
-
-    return {
-
-        "top_picks": top_picks_controller.get_top(
-
-            symbols=TICKERS,
-
-            top=req.top,
-
-            signal=req.signal,
-
-            min_confidence=req.min_confidence,
-
-        )
-
-    }
 
 
 # ============================================================
@@ -187,7 +165,9 @@ def top_picks(req: TopPicksRequest):
 @app.post("/intelligence")
 def intelligence(req: IntelligenceRequest):
 
-    return intelligence_controller.analyze(req.symbol)
+    return intelligence_controller.analyze(
+        req.symbol.upper()
+    )
 
 
 # ============================================================
@@ -228,7 +208,6 @@ def news(req: IntelligenceRequest):
         "news": [item.__dict__ for item in news]
     }
 
-
 # ============================================================
 # KAP
 # ============================================================
@@ -243,18 +222,20 @@ def kap(req: IntelligenceRequest):
     return {
         "kap": [item.__dict__ for item in events]
     }
+@app.post("/top-picks")
+def top_picks(req: TopPicksRequest):
 
-# ============================================================
-# KAP
-# ============================================================
-
-@app.post("/kap")
-def kap(req: IntelligenceRequest):
-
-    service = KapService()
-
-    events = service.get_announcements(req.symbol.upper())
+    print("=" * 60)
+    print("TICKERS:", len(TICKERS))
+    print(TICKERS[:10])
+    print("REQUEST:", req)
+    print("=" * 60)
 
     return {
-        "kap": [item.__dict__ for item in events]
+        "top_picks": top_picks_controller.get_top(
+            symbols=TICKERS,
+            top=req.top,
+            signal=req.signal,
+            min_confidence=req.min_confidence,
+        )
     }

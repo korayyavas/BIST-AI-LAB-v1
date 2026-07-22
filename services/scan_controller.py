@@ -12,8 +12,10 @@ class ScanController:
                 for k,v in list(r.items()):
                     if isinstance(v,float):
                         r[k]=round(v,2)
-                if signal and r["signal"]!=signal:
-                    continue
+                if signal and signal != "ALL":
+
+                    if r["signal"] != signal:
+                        continue
                 if r["confidence"]<min_confidence:
                     continue
                 results.append(r)
