@@ -1,37 +1,193 @@
 """
-BIST AI LAB v3
-Main Entry Point
+main.py
+
+BIST AI LAB
+FastAPI Application Entry Point
+
 """
 
 from __future__ import annotations
 
-from utils.logger import Logger
+import logging
 
-from config.settings import (
-    PROJECT_NAME,
-    VERSION,
+from fastapi import FastAPI
+
+from api import (
+
+    dashboard_router,
+
+    news_router,
+
+    kap_router,
+
+    research_router,
+
+    decision_router,
+
 )
 
 
-def main():
 
-    logger = Logger()
-
-    logger.info("=" * 60)
-    logger.info(f"{PROJECT_NAME} v{VERSION}")
-    logger.info("System Started")
-    logger.info("=" * 60)
-
-    print("=" * 60)
-    print(f"{PROJECT_NAME} v{VERSION}")
-    print("=" * 60)
-    print("✔ System initialized")
-    print("✔ AI Engine ready")
-    print("✔ Dashboard ready")
-    print("✔ API ready")
-    print("=" * 60)
+# ============================================================
+# LOGGING
+# ============================================================
 
 
-if __name__ == "__main__":
+logging.basicConfig(
 
-    main()
+    level=logging.INFO,
+
+    format=(
+
+        "%(asctime)s | "
+
+        "%(levelname)s | "
+
+        "%(message)s"
+
+    ),
+
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+
+# ============================================================
+# APPLICATION
+# ============================================================
+
+
+app = FastAPI(
+
+    title="BIST AI LAB",
+
+    description=(
+
+        "AI Powered "
+
+        "Borsa Istanbul "
+
+        "Analysis Platform"
+
+    ),
+
+    version="2.0.0",
+
+)
+
+
+
+# ============================================================
+# ROUTERS
+# ============================================================
+
+
+app.include_router(
+
+    dashboard_router
+
+)
+
+
+app.include_router(
+
+    news_router
+
+)
+
+
+app.include_router(
+
+    kap_router
+
+)
+
+
+app.include_router(
+
+    research_router
+
+)
+
+
+app.include_router(
+
+    decision_router
+
+)
+
+
+
+# ============================================================
+# ROOT
+# ============================================================
+
+
+@app.get("/")
+
+def root():
+
+    return {
+
+
+        "name":
+
+        "BIST AI LAB",
+
+
+        "version":
+
+        "2.0.0",
+
+
+        "status":
+
+        "running",
+
+
+        "modules":
+
+        [
+
+            "News Intelligence",
+
+            "KAP Intelligence",
+
+            "Research Engine",
+
+            "Consensus Engine",
+
+            "Decision Engine",
+
+            "Dashboard",
+
+        ],
+
+    }
+
+
+
+# ============================================================
+# HEALTH
+# ============================================================
+
+
+@app.get("/health")
+
+def health():
+
+    return {
+
+
+        "status":
+
+        "ok",
+
+
+        "service":
+
+        "BIST AI LAB API",
+
+    }

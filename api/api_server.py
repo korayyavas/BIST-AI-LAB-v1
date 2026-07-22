@@ -1,16 +1,27 @@
+from __future__ import annotations
+
 """
 REST API Server
 BIST AI LAB v10.0
 """
+from services.news_service import get_news
 
-from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from dataclasses import asdict
 from core.startup import Startup
 from core.system_info import SystemInfo
 from config.settings import TICKERS
+from pydantic import BaseModel
+from api.dashboard import router as dashboard_router
+from api.news import router as news_router
+from api.kap import router as kap_router
+from api.research import router as research_router
+from api.decision import router as decision_router
+
+class NewsRequest(BaseModel):
+    symbol: str
 
 from api.predict_models import PredictRequest
 from api.scan_models import ScanRequest
@@ -50,7 +61,11 @@ app = FastAPI(
     version="10.0.0",
 
 )
-
+app.include_router(dashboard_router)
+app.include_router(news_router)
+app.include_router(kap_router)
+app.include_router(research_router)
+app.include_router(decision_router)
 app.add_middleware(
 
     CORSMiddleware,
@@ -238,24 +253,21 @@ def research(req: ResearchRequest):
 # ==========================================================
 
 @app.post("/news")
-def news(req: IntelligenceRequest):
+def news(
+    request: NewsRequest
+):
 
-    news = news_service.get_news(
+    symbol = request.symbol.upper()
 
-        req.symbol.upper()
-
-    )
+    result = get_news(symbol)
 
     return {
-
-        "news": [
-
-            item.__dict__
-
-            for item in news
-
+        "symbol": symbol,
+        "count": len(result),
+        "items": [
+            asdict(item)
+            for item in result
         ]
-
     }
 
 

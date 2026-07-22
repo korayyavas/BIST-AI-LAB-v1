@@ -1,11 +1,11 @@
-
+from __future__ import annotations
 """
 Prediction Service
 BIST AI LAB v6
 Backward-compatible and auto-loads trained model.
 """
 
-from __future__ import annotations
+
 
 from models.classification_trainer import ClassificationTrainer
 from core.signal_engine import SignalEngine
