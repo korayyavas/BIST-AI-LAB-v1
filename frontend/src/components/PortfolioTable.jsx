@@ -10,33 +10,53 @@ import {
 
 } from "@mui/material";
 
+
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { useEffect,useState } from "react";
+
+import { useEffect, useState } from "react";
+
 
 import axios from "../api/api";
 
+
+
 export default function PortfolioTable(){
 
-    const [stocks,setStocks]=useState([]);
 
-    const [loading,setLoading]=useState(false);
+    const [stocks, setStocks] = useState([]);
+
+
+    const [loading, setLoading] = useState(false);
+
+
+
 
     useEffect(()=>{
 
+
         load();
+
 
     },[]);
 
-    const load=async()=>{
+
+
+
+
+    const load = async()=>{
+
 
         try{
 
+
             setLoading(true);
 
-            const res=await axios.post(
+
+
+            const res = await axios.post(
 
                 "/top-picks",
 
@@ -52,31 +72,71 @@ export default function PortfolioTable(){
 
             );
 
-            setStocks(
 
-                res.data.top_picks || []
+
+            console.log(
+
+                "TOP PICKS RESPONSE:",
+
+                res.data
 
             );
 
+
+
+            setStocks(
+
+                res.data?.top_picks ?? []
+
+            );
+
+
+
         }
 
-        catch{
+
+        catch(error){
+
+
+            console.error(
+
+                "TOP PICKS ERROR:",
+
+                error
+
+            );
+
 
             setStocks([]);
 
+
+
         }
+
 
         finally{
 
+
             setLoading(false);
+
+
 
         }
 
+
+
     };
 
-    if(loading)
+
+
+
+
+
+    if(loading){
+
 
         return(
+
 
             <Box
 
@@ -88,15 +148,29 @@ export default function PortfolioTable(){
 
             >
 
+
                 <CircularProgress/>
+
 
             </Box>
 
+
         );
+
+
+    }
+
+
+
+
+
+
 
     return(
 
+
         <>
+
 
             <Typography
 
@@ -112,113 +186,218 @@ export default function PortfolioTable(){
 
             </Typography>
 
+
+
+
+
+            {
+
+                stocks.length === 0 && (
+
+
+                    <Typography
+
+                        color="#9ca3af"
+
+                    >
+
+                        Veri bekleniyor...
+
+                    </Typography>
+
+
+                )
+
+
+            }
+
+
+
+
+
+
             <Stack spacing={2}>
+
 
                 {
 
+
                     stocks.map((s,index)=>{
 
-                        let color="#ffc107";
 
-                        let icon=<RemoveIcon/>;
+
+                        let color = "#ffc107";
+
+
+                        let icon = <RemoveIcon/>;
+
+
+
+
 
                         if(
 
-                            s.signal==="BUY" ||
+                            s.signal === "BUY" ||
 
-                            s.signal==="STRONG BUY"
+                            s.signal === "STRONG BUY"
 
                         ){
+
 
                             color="#00e676";
 
+
                             icon=<TrendingUpIcon/>;
 
+
                         }
+
+
+
+
 
                         if(
 
-                            s.signal==="SELL" ||
+                            s.signal === "SELL" ||
 
-                            s.signal==="STRONG SELL"
+                            s.signal === "STRONG SELL"
 
                         ){
 
+
                             color="#ff5252";
+
 
                             icon=<TrendingDownIcon/>;
 
+
                         }
+
+
+
+
+
 
                         return(
 
+
+
                             <Card
 
-                                key={index}
+
+                                key={
+
+                                    s.symbol || index
+
+                                }
+
 
                                 sx={{
 
+
                                     bgcolor:"#161b22",
+
 
                                     border:"1px solid #283241",
 
+
                                     transition:".25s",
+
 
                                     "&:hover":{
 
+
                                         borderColor:"#3b82f6",
+
 
                                         transform:"translateY(-3px)"
 
+
                                     }
+
 
                                 }}
 
+
+
                             >
+
+
 
                                 <CardContent>
 
+
+
                                     <Stack
+
 
                                         direction="row"
 
+
                                         justifyContent="space-between"
+
 
                                         alignItems="center"
 
+
                                     >
+
+
 
                                         <Typography
 
+
                                             variant="h6"
+
 
                                             fontWeight={700}
 
+
                                         >
+
 
                                             {s.symbol}
 
+
                                         </Typography>
+
+
+
+
 
                                         <Chip
 
+
                                             icon={icon}
+
 
                                             label={s.signal}
 
+
                                             sx={{
+
 
                                                 bgcolor:color,
 
+
                                                 color:"white",
+
 
                                                 fontWeight:700
 
+
                                             }}
+
 
                                         />
 
+
+
                                     </Stack>
+
+
+
+
 
                                     <Typography
 
@@ -230,34 +409,141 @@ export default function PortfolioTable(){
 
                                         Confidence
 
+
                                     </Typography>
+
+
+
+
 
                                     <Typography
 
+
                                         variant="h4"
+
 
                                         color={color}
 
+
                                     >
 
-                                        {Math.round(s.confidence)}%
+
+                                        {
+
+                                            Math.round(
+
+                                                s.confidence ?? 0
+
+                                            )
+
+                                        }%
+
+
 
                                     </Typography>
 
+
+
+
+
+                                    <Typography
+
+
+                                        mt={1}
+
+
+                                        color="#9ca3af"
+
+
+                                    >
+
+
+                                        AI Score:
+
+                                        {" "}
+
+                                        {
+
+                                            Math.round(
+
+                                                s.score ??
+
+                                                s.top_score ??
+
+                                                0
+
+                                            )
+
+                                        }
+
+
+
+                                    </Typography>
+
+
+
+
+
+                                    <Typography
+
+
+                                        mt={1}
+
+
+                                        color="#9ca3af"
+
+
+                                    >
+
+
+                                        Risk:
+
+                                        {" "}
+
+                                        {
+
+                                            Math.round(
+
+                                                s.risk_score ?? 0
+
+                                            )
+
+                                        }
+
+
+
+                                    </Typography>
+
+
+
                                 </CardContent>
+
+
 
                             </Card>
 
+
                         );
+
+
 
                     })
 
+
+
                 }
+
+
 
             </Stack>
 
+
+
         </>
 
+
     );
+
+
 
 }

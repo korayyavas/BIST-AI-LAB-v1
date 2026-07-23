@@ -1,151 +1,231 @@
 import {
 
     Card,
-
     CardContent,
-
     Grid,
-
     Typography,
-
     LinearProgress,
-
     Box,
-
     Chip,
-
     Stack
 
 } from "@mui/material";
+
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-export default function ScoreCard({ data }) {
 
-    if (!data) {
 
-        return (
+export default function ScoreCard({
 
-            <Card
-                className="card glow"
-            >
+    data = {}
 
-                <CardContent>
+}) {
 
-                    <Typography
-                        variant="h4"
-                    >
 
-                        Select a symbol and click Analyze
 
-                    </Typography>
+    const score = Number(
 
-                </CardContent>
+        data.ai_score ?? 0
 
-            </Card>
+    );
 
-        );
 
-    }
+    const decision =
+
+        data.decision ??
+
+        "HOLD";
+
+
+
+    const confidence = Number(
+
+        data.confidence ?? 0
+
+    );
+
+
 
     const color =
 
-        data.decision.includes("BUY")
+        decision.includes("BUY")
 
             ? "#00e676"
 
-            : data.decision.includes("SELL")
+            :
+
+        decision.includes("SELL")
 
             ? "#ff5252"
 
-            : "#ffc107";
+            :
+
+            "#ffc107";
+
+
 
     const icon =
 
-        data.decision.includes("BUY")
+        decision.includes("BUY")
 
-            ? <TrendingUpIcon sx={{fontSize:34}}/>
+            ?
 
-            : data.decision.includes("SELL")
+            <TrendingUpIcon/>
 
-            ? <TrendingDownIcon sx={{fontSize:34}}/>
+            :
 
-            : <RemoveIcon sx={{fontSize:34}}/>;
+        decision.includes("SELL")
+
+            ?
+
+            <TrendingDownIcon/>
+
+            :
+
+            <RemoveIcon/>;
+
+
+
+    const components = [
+
+        {
+
+            name:"ML",
+
+            value:data.ml_score ?? 0
+
+        },
+
+        {
+
+            name:"Technical",
+
+            value:data.technical_score ?? 0
+
+        },
+
+        {
+
+            name:"News",
+
+            value:data.news_score ?? 0
+
+        },
+
+        {
+
+            name:"Research",
+
+            value:data.research_score ?? 0
+
+        },
+
+        {
+
+            name:"KAP",
+
+            value:data.kap_score ?? 0
+
+        }
+
+    ];
+
+
 
     return (
 
         <Card
+
             className="card glow"
+
         >
 
             <CardContent>
 
+
                 <Grid
+
                     container
-                    spacing={4}
+
+                    spacing={3}
+
                     alignItems="center"
+
                 >
+
+
 
                     <Grid item xs={3}>
 
+
                         <Typography
-                            variant="h3"
-                            fontWeight="bold"
+
+                            color="#8b949e"
+
                         >
 
-                            {data.symbol}
+                            AI DECISION
 
                         </Typography>
 
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            mt={2}
-                        >
 
-                            <Chip
 
-                                icon={icon}
+                        <Chip
 
-                                label={data.decision}
+                            icon={icon}
 
-                                sx={{
+                            label={decision}
 
-                                    bgcolor:color,
+                            sx={{
 
-                                    color:"#fff",
+                                mt:2,
 
-                                    fontWeight:700,
+                                bgcolor:color,
 
-                                    fontSize:16
+                                color:"#fff",
 
-                                }}
+                                fontWeight:700,
 
-                            />
+                                fontSize:16
 
-                        </Stack>
+                            }}
+
+                        />
+
+
 
                     </Grid>
 
+
+
+
+
+
                     <Grid item xs={3}>
 
+
                         <Typography
+
                             color="#8b949e"
+
                         >
 
                             AI SCORE
 
                         </Typography>
 
+
+
                         <Typography
 
                             variant="h1"
 
-                            sx={{
+                            fontWeight={800}
 
-                                fontWeight:800,
+                            sx={{
 
                                 color
 
@@ -153,211 +233,177 @@ export default function ScoreCard({ data }) {
 
                         >
 
-                            {data.ai_score}
+                            {score.toFixed(1)}
 
                         </Typography>
+
+
 
                         <LinearProgress
 
                             variant="determinate"
 
-                            value={data.ai_score}
+                            value={score}
 
                             sx={{
 
-                                mt:2,
-
                                 height:10,
 
-                                borderRadius:10,
-
-                                bgcolor:"#1f2937",
-
-                                "& .MuiLinearProgress-bar":{
-
-                                    background:color
-
-                                }
+                                borderRadius:10
 
                             }}
 
                         />
 
+
+
                     </Grid>
+
+
+
+
+
+
 
                     <Grid item xs={2}>
 
+
                         <Typography
+
                             color="#8b949e"
+
                         >
 
                             Confidence
 
                         </Typography>
 
+
                         <Typography
+
                             variant="h4"
+
                         >
 
-                            {data.confidence}%
+                            {confidence.toFixed(1)}%
 
                         </Typography>
 
-                        <Box mt={3}/>
 
-                        <Typography
-                            color="#8b949e"
-                        >
-
-                            Risk
-
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                        >
-
-                            {data.risk}
-
-                        </Typography>
 
                     </Grid>
 
-                    <Grid item xs={2}>
+
+
+
+
+
+
+                    <Grid item xs={4}>
+
 
                         <Typography
+
                             color="#8b949e"
-                        >
 
-                            Consensus
-
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                        >
-
-                            {data.consensus}
-
-                        </Typography>
-
-                        <Box mt={3}/>
-
-                        <Typography
-                            color="#8b949e"
-                        >
-
-                            Target
-
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                        >
-
-                            ₺ {data.target_price}
-
-                        </Typography>
-
-                    </Grid>
-
-                    <Grid item xs={2}>
-
-                        <Typography
-                            color="#8b949e"
                             mb={1}
+
                         >
 
-                            Intelligence
+                            Intelligence Modules
 
                         </Typography>
 
-                        <Typography>
 
-                            ML {Math.round(data.ml_score)}
 
-                        </Typography>
 
-                        <LinearProgress
+                        <Stack spacing={1}>
 
-                            value={data.ml_score}
 
-                            variant="determinate"
+                            {
 
-                            sx={{mb:1}}
+                                components.map((item,index)=>(
 
-                        />
 
-                        <Typography>
+                                    <Box key={index}>
 
-                            Technical {Math.round(data.technical_score)}
 
-                        </Typography>
+                                        <Stack
 
-                        <LinearProgress
+                                            direction="row"
 
-                            value={data.technical_score}
+                                            justifyContent="space-between"
 
-                            variant="determinate"
+                                        >
 
-                            sx={{mb:1}}
 
-                        />
+                                            <Typography
 
-                        <Typography>
+                                                variant="caption"
 
-                            Research {Math.round(data.research_score)}
+                                            >
 
-                        </Typography>
+                                                {item.name}
 
-                        <LinearProgress
+                                            </Typography>
 
-                            value={data.research_score}
 
-                            variant="determinate"
 
-                            sx={{mb:1}}
+                                            <Typography
 
-                        />
+                                                variant="caption"
 
-                        <Typography>
+                                            >
 
-                            News {Math.round(data.news_score)}
+                                                {Number(item.value).toFixed(1)}
 
-                        </Typography>
+                                            </Typography>
 
-                        <LinearProgress
 
-                            value={data.news_score}
 
-                            variant="determinate"
+                                        </Stack>
 
-                            sx={{mb:1}}
 
-                        />
 
-                        <Typography>
 
-                            KAP {Math.round(data.kap_score)}
+                                        <LinearProgress
 
-                        </Typography>
+                                            variant="determinate"
 
-                        <LinearProgress
+                                            value={Number(item.value)}
 
-                            value={data.kap_score}
+                                        />
 
-                            variant="determinate"
 
-                        />
+
+                                    </Box>
+
+
+                                ))
+
+                            }
+
+
+
+                        </Stack>
+
+
 
                     </Grid>
+
+
+
 
                 </Grid>
 
+
+
             </CardContent>
+
 
         </Card>
 
     );
+
 
 }

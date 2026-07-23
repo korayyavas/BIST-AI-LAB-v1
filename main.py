@@ -1,16 +1,43 @@
 """
-main.py
-
 BIST AI LAB
-FastAPI Application Entry Point
-
+Main Application v10.0
 """
 
 from __future__ import annotations
 
-import logging
+
+# ============================================================
+# UTF-8 FIX
+# ============================================================
+
+import sys
+
+
+try:
+
+    sys.stdout.reconfigure(
+        encoding="utf-8"
+    )
+
+    sys.stderr.reconfigure(
+        encoding="utf-8"
+    )
+
+except Exception:
+
+    pass
+
+
+
+# ============================================================
+# IMPORTS
+# ============================================================
+
 
 from fastapi import FastAPI
+
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from api import (
 
@@ -24,33 +51,11 @@ from api import (
 
     decision_router,
 
-)
-
-
-
-# ============================================================
-# LOGGING
-# ============================================================
-
-
-logging.basicConfig(
-
-    level=logging.INFO,
-
-    format=(
-
-        "%(asctime)s | "
-
-        "%(levelname)s | "
-
-        "%(message)s"
-
-    ),
+    top_picks_router,
 
 )
 
 
-logger = logging.getLogger(__name__)
 
 
 
@@ -63,19 +68,75 @@ app = FastAPI(
 
     title="BIST AI LAB",
 
-    description=(
+    description="""
 
-        "AI Powered "
+AI destekli Borsa İstanbul analiz platformu.
 
-        "Borsa Istanbul "
+Modüller:
 
-        "Analysis Platform"
+- Machine Learning Prediction
+- Technical Analysis
+- News Intelligence
+- KAP Analysis
+- Research Engine
+- Consensus Decision Engine
+- Top Picks Engine
 
-    ),
+""",
 
-    version="2.0.0",
+    version="10.0.0",
 
 )
+
+
+
+
+
+# ============================================================
+# CORS
+# ============================================================
+
+
+app.add_middleware(
+
+    CORSMiddleware,
+
+    allow_origins=[
+
+        "http://localhost:3000",
+
+        "http://127.0.0.1:3000",
+
+        "http://localhost:5173",
+
+        "http://127.0.0.1:5173",
+
+        "http://localhost:5174",
+
+        "http://127.0.0.1:5174",
+
+    ],
+
+
+    allow_credentials=True,
+
+
+    allow_methods=[
+
+        "*"
+
+    ],
+
+
+    allow_headers=[
+
+        "*"
+
+    ],
+
+)
+
+
 
 
 
@@ -119,6 +180,15 @@ app.include_router(
 )
 
 
+app.include_router(
+
+    top_picks_router
+
+)
+
+
+
+
 
 # ============================================================
 # ROOT
@@ -139,33 +209,16 @@ def root():
 
         "version":
 
-        "2.0.0",
+        "10.0.0",
 
 
         "status":
 
-        "running",
-
-
-        "modules":
-
-        [
-
-            "News Intelligence",
-
-            "KAP Intelligence",
-
-            "Research Engine",
-
-            "Consensus Engine",
-
-            "Decision Engine",
-
-            "Dashboard",
-
-        ],
+        "running"
 
     }
+
+
 
 
 
@@ -178,6 +231,7 @@ def root():
 
 def health():
 
+
     return {
 
 
@@ -188,6 +242,36 @@ def health():
 
         "service":
 
-        "BIST AI LAB API",
+        "BIST AI LAB API"
+
 
     }
+
+
+
+
+
+# ============================================================
+# STARTUP
+# ============================================================
+
+
+@app.on_event("startup")
+
+async def startup_event():
+
+
+    print(
+
+        """
+
+=====================================
+ BIST AI LAB v10.0
+ API SERVER STARTED
+ UTF-8 ENABLED
+ TOP PICKS ENABLED
+=====================================
+
+        """
+
+    )

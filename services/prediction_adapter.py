@@ -2,24 +2,36 @@
 Prediction Adapter
 BIST AI LAB v6
 
-Connects:
-Market Data
+Market
 Feature Pipeline
-Prediction Service
+ML Model
+Cache
 Dashboard
 """
 
 import logging
 
+
 from pipeline.feature_pipeline import FeaturePipeline
+
 from services.prediction_service import PredictionService
-from services.providers.market_data_provider import market_data_provider
+
+from services.providers.market_data_provider import (
+    market_data_provider
+)
+
+from services.cache.prediction_cache import (
+    prediction_cache
+)
+
 
 
 logger = logging.getLogger(__name__)
 
 
+
 class PredictionAdapter:
+
 
 
     def __init__(self):
@@ -30,12 +42,37 @@ class PredictionAdapter:
 
 
 
-    def predict(self, symbol: str):
+    def predict(
+        self,
+        symbol: str
+    ):
+
 
         symbol = symbol.upper()
 
 
+
+        cached = prediction_cache.get(
+            symbol
+        )
+
+
+        if cached:
+
+
+            logger.info(
+                "Prediction cache hit: %s",
+                symbol
+            )
+
+
+            return cached
+
+
+
+
         try:
+
 
             logger.info(
                 "ML prediction started: %s",
@@ -43,13 +80,11 @@ class PredictionAdapter:
             )
 
 
-            # -----------------------------
-            # MARKET DATA
-            # -----------------------------
 
             df = market_data_provider.get(
                 symbol
             )
+
 
 
             if df is None or df.empty:
@@ -59,13 +94,11 @@ class PredictionAdapter:
                 )
 
 
-            # -----------------------------
-            # FEATURE ENGINEERING
-            # -----------------------------
 
             processed = self.pipeline.transform(
                 df
             )
+
 
 
             features = self.pipeline.latest_features(
@@ -73,27 +106,28 @@ class PredictionAdapter:
             )
 
 
-            # -----------------------------
-            # CURRENT PRICE
-            # -----------------------------
 
             current_price = float(
+
                 df["Close"].iloc[-1]
+
             )
+
 
 
             atr = 0.0
 
+
             if "ATR" in processed.columns:
 
                 atr = float(
+
                     processed["ATR"].iloc[-1]
+
                 )
 
 
-            # -----------------------------
-            # MODEL
-            # -----------------------------
+
 
             result = self.service.predict(
 
@@ -106,37 +140,89 @@ class PredictionAdapter:
             )
 
 
-            return {
+
+
+            response = {
+
 
                 "symbol": symbol,
 
+
                 "price": current_price,
+
 
                 **result
 
+
             }
+
+
+
+            prediction_cache.set(
+
+                symbol,
+
+                response
+
+            )
+
+
+
+            logger.info(
+
+                "ML prediction completed: %s",
+
+                response
+
+            )
+
+
+
+            return response
+
+
 
 
         except Exception as e:
 
 
             logger.error(
+
                 "Prediction failed %s: %s",
+
                 symbol,
+
                 e
+
             )
+
 
 
             return {
 
+
                 "symbol": symbol,
 
-                "status": "error",
 
-                "message": str(e)
+                "status":"error",
+
+
+                "message":str(e)
 
             }
 
 
 
+
+
 prediction_adapter = PredictionAdapter()
+
+
+
+__all__=[
+
+    "PredictionAdapter",
+
+    "prediction_adapter"
+
+]

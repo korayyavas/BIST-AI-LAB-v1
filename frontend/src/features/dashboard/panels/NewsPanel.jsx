@@ -1,71 +1,13 @@
 import {
-    Paper,
     Typography,
+    Box,
     Stack,
     Chip,
-    CircularProgress,
-    Divider,
-    Link,
-    Rating,
-    Box,
 } from "@mui/material";
 
-function effectColor(effect) {
+import PublicIcon from "@mui/icons-material/Public";
 
-    switch (effect) {
 
-        case "POZITIF":
-            return "success";
-
-        case "NEGATIF":
-            return "error";
-
-        default:
-            return "warning";
-
-    }
-
-}
-
-function sentimentColor(sentiment) {
-
-    switch (sentiment) {
-
-        case "POSITIVE":
-            return "success";
-
-        case "NEGATIVE":
-            return "error";
-
-        default:
-            return "warning";
-
-    }
-
-}
-
-function categoryColor(category) {
-
-    switch (category) {
-
-        case "COMPANY":
-            return "primary";
-
-        case "SECTOR":
-            return "success";
-
-        case "MACRO":
-            return "warning";
-
-        case "GEOPOLITICAL":
-            return "secondary";
-
-        default:
-            return "default";
-
-    }
-
-}
 
 export default function NewsPanel({
 
@@ -75,270 +17,355 @@ export default function NewsPanel({
 
 }) {
 
-    if (loading) {
+
+
+    if(loading){
 
         return (
 
-            <Paper
-                sx={{
-                    p: 2,
-                    height: 700,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
+            <Typography>
 
-                <CircularProgress />
+                Haberler yükleniyor...
 
-            </Paper>
+            </Typography>
 
         );
 
     }
 
+
+
+
     return (
 
-        <Paper
+        <Box
+
             sx={{
-                p: 2,
-                height: 700,
-                overflow: "auto",
+
+                height:"100%",
+
+                overflow:"hidden"
+
             }}
+
         >
 
+
             <Typography
-                variant="h5"
-                fontWeight="bold"
-                mb={2}
+
+                variant="h6"
+
+                mb={1}
+
+                fontWeight={700}
+
             >
+
                 📰 AI NEWS INTELLIGENCE
+
             </Typography>
 
-            <Typography
-                variant="body2"
-                color="text.secondary"
-                mb={3}
+
+
+
+
+            <Box
+
+                sx={{
+
+                    height:"calc(100% - 40px)",
+
+                    overflow:"auto",
+
+                    pr:1
+
+                }}
+
             >
-                AI önem puanına göre sıralanmış haberler
-            </Typography>
 
-            {news.length === 0 && (
 
-                <Typography color="text.secondary">
+                <Stack spacing={1.2}>
 
-                    Haber bulunamadı.
 
-                </Typography>
+                    {
 
-            )}
+                    news.length===0 &&
 
-            <Stack spacing={2}>
+                    <Typography color="gray">
 
-                {news.map((item, index) => (
+                        Haber bulunamadı.
 
-                    <Paper
-                        key={index}
-                        elevation={3}
-                        sx={{
-                            p: 2,
-                            borderRadius: 3,
-                        }}
-                    >
+                    </Typography>
 
-                        <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            flexWrap="wrap"
-                            spacing={1}
-                            mb={2}
+                    }
+
+
+
+
+
+                    {
+
+                    news.map((item,index)=>(
+
+
+                        <Box
+
+                            key={index}
+
+                            sx={{
+
+                                p:1.5,
+
+                                borderRadius:3,
+
+                                background:"#161b22",
+
+                                border:"1px solid #26313d"
+
+                            }}
+
                         >
 
+
+
+
                             <Stack
+
                                 direction="row"
+
+                                justifyContent="space-between"
+
+                                alignItems="center"
+
                                 spacing={1}
-                                flexWrap="wrap"
+
                             >
+
+
 
                                 <Chip
 
-                                    label={item.source}
+                                    icon={<PublicIcon/>}
+
+                                    label={
+
+                                        item.source || "NEWS"
+
+                                    }
+
+                                    size="small"
 
                                     color="primary"
 
-                                    size="small"
-
                                 />
+
+
+
+
 
                                 <Chip
 
-                                    label={item.category || "OTHER"}
+                                    label={
 
-                                    color={categoryColor(item.category)}
+                                        item.market_effect ||
+
+                                        item.sentiment ||
+
+                                        "UNKNOWN"
+
+                                    }
 
                                     size="small"
 
+                                    color={
+
+                                        item.market_effect==="POZITIF"
+
+                                        ?
+
+                                        "success"
+
+                                        :
+
+                                        item.market_effect==="NEGATIF"
+
+                                        ?
+
+                                        "error"
+
+                                        :
+
+                                        "warning"
+
+                                    }
+
                                 />
+
+
 
                             </Stack>
 
-                            <Chip
 
-                                label={item.market_effect}
 
-                                color={effectColor(item.market_effect)}
 
-                            />
 
-                        </Stack>
 
-                        <Typography
-                            variant="h6"
-                            fontWeight="bold"
-                        >
 
-                            {item.title_tr || item.title}
+                            <Typography
 
-                        </Typography>
+                                mt={1}
 
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            mt={1}
-                        >
+                                fontWeight={700}
 
-                            {item.summary}
+                                sx={{
 
-                        </Typography>
+                                    display:"-webkit-box",
 
-                        {(item.short_effect || item.long_effect) && (
+                                    WebkitLineClamp:2,
 
-                            <>
+                                    WebkitBoxOrient:"vertical",
 
-                                <Divider sx={{ my: 2 }} />
+                                    overflow:"hidden"
 
-                                <Typography
-                                    fontWeight="bold"
-                                    gutterBottom
-                                >
-                                    📈 Etki Analizi
-                                </Typography>
-
-                                {item.short_effect && (
-
-                                    <Typography variant="body2">
-
-                                        <b>Kısa Vade:</b> {item.short_effect}
-
-                                    </Typography>
-
-                                )}
-
-                                {item.long_effect && (
-
-                                    <Typography
-                                        variant="body2"
-                                        mt={1}
-                                    >
-
-                                        <b>Uzun Vade:</b> {item.long_effect}
-
-                                    </Typography>
-
-                                )}
-
-                            </>
-
-                        )}
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Typography
-                            fontWeight="bold"
-                            gutterBottom
-                        >
-                            🤖 AI Yorumu
-                        </Typography>
-
-                        <Typography variant="body2">
-
-                            {item.ai_comment || "AI yorumu bulunmuyor."}
-
-                        </Typography>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            alignItems="center"
-                        >
-
-                            <Rating
-
-                                value={item.importance}
-
-                                readOnly
-
-                            />
-
-                            <Chip
-
-                                label={item.sentiment}
-
-                                color={sentimentColor(item.sentiment)}
-
-                            />
-
-                            <Chip
-
-                                color="info"
-
-                                label={`AI ${item.score}`}
-
-                            />
-
-                            {item.relevance && (
-
-                                <Chip
-
-                                    color="secondary"
-
-                                    label={`İlgi ${item.relevance}`}
-
-                                />
-
-                            )}
-
-                        </Stack>
-
-                        <Box mt={2}>
-
-                            <Link
-
-                                href={item.url}
-
-                                target="_blank"
-
-                                underline="hover"
+                                }}
 
                             >
 
-                                🔗 Orijinal Haberi Oku
+                                {
 
-                            </Link>
+                                    item.title_tr ||
+
+                                    item.title ||
+
+                                    "-"
+
+                                }
+
+
+                            </Typography>
+
+
+
+
+
+
+
+                            <Typography
+
+                                mt={0.5}
+
+                                color="#9ca3af"
+
+                                fontSize={14}
+
+                                sx={{
+
+                                    display:"-webkit-box",
+
+                                    WebkitLineClamp:2,
+
+                                    WebkitBoxOrient:"vertical",
+
+                                    overflow:"hidden"
+
+                                }}
+
+                            >
+
+                                {
+
+                                    item.summary ||
+
+                                    "-"
+
+                                }
+
+
+                            </Typography>
+
+
+
+
+
+
+
+                            <Typography
+
+                                mt={0.5}
+
+                                fontSize={13}
+
+                            >
+
+                                🤖 AI:
+
+                                {" "}
+
+                                {
+
+                                    item.ai_comment ||
+
+                                    "-"
+
+                                }
+
+
+                            </Typography>
+
+
+
+
+
+
+
+                            <Typography
+
+                                mt={0.5}
+
+                                color="#60a5fa"
+
+                                fontSize={13}
+
+                            >
+
+                                AI Score:
+
+                                {" "}
+
+                                {
+
+                                    Math.round(
+
+                                        item.score || 0
+
+                                    )
+
+                                }
+
+
+                            </Typography>
+
+
+
+
 
                         </Box>
 
-                    </Paper>
 
-                ))}
+                    ))
 
-            </Stack>
+                    }
 
-        </Paper>
+
+
+                </Stack>
+
+
+            </Box>
+
+
+        </Box>
+
 
     );
 

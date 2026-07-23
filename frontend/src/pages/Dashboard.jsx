@@ -1,225 +1,600 @@
+import { useMemo } from "react";
+
 import {
-
+    Alert,
     Box,
-
     Grid,
-
-    Typography,
-
-    Paper,
-
     Stack,
-
-    Button,
-
-    TextField
-
+    Typography,
 } from "@mui/material";
 
-import { useState } from "react";
 
-import axios from "../api/api";
+import { useDashboard } from "./dashboard/hooks";
 
-import ScoreCard from "../components/ScoreCard";
-import PortfolioTable from "../components/PortfolioTable";
-import RadarChart from "../components/RadarChart";
-import NewsPanel from "../components/NewsPanel";
-import ResearchPanel from "../components/ResearchPanel";
 
-export default function Dashboard(){
+import {
+    DashboardProvider,
+    useDashboardContext,
+} from "./dashboard/DashboardContext";
 
-    const [symbol,setSymbol]=useState("ASELS");
 
-    const [data,setData]=useState(null);
+import AIScoreCard from "./dashboard/cards/AIScoreCard";
+import KPICard from "./dashboard/cards/KPICard";
 
-    const analyze=async()=>{
 
-        const res=await axios.post(
+import TradingChart from "./dashboard/charts/TradingChart";
+import RadarChart from "./dashboard/charts/RadarChart";
 
-            "/intelligence",
 
-            {
+import PortfolioPanel from "./dashboard/panels/PortfolioPanel";
+import NewsPanel from "./dashboard/panels/NewsPanel";
+import ResearchPanel from "./dashboard/panels/ResearchPanel";
+import KapPanel from "./dashboard/panels/KapPanel";
 
-                symbol
 
-            }
+import StatusBar from "./dashboard/widgets/StatusBar";
+
+
+
+
+function DashboardContent(){
+
+
+    const { selectedSymbol } = useDashboardContext();
+
+
+
+    const {
+
+        loading,
+
+        error,
+
+        data,
+
+    } = useDashboard(
+
+        selectedSymbol
+
+    );
+
+
+
+
+
+    const intelligence = useMemo(()=>{
+
+
+        const backendIntel =
+
+            data?.intelligence ?? {};
+
+
+
+        const consensus =
+
+            data?.consensus ?? {};
+
+
+
+        return {
+
+
+            ai_score:
+
+                backendIntel.ai_score ??
+
+                consensus.score ??
+
+                0,
+
+
+
+            decision:
+
+                backendIntel.decision ??
+
+                consensus.decision ??
+
+                "HOLD",
+
+
+
+            confidence:
+
+                backendIntel.confidence ??
+
+                50,
+
+
+
+            ml_score:
+
+                backendIntel.ml_score ??
+
+                0,
+
+
+
+            technical_score:
+
+                backendIntel.technical_score ??
+
+                0,
+
+
+
+            news_score:
+
+                backendIntel.news_score ??
+
+                0,
+
+
+
+            research_score:
+
+                backendIntel.research_score ??
+
+                0,
+
+
+
+            kap_score:
+
+                backendIntel.kap_score ??
+
+                0,
+
+
+
+            strengths:
+
+                backendIntel.strengths ??
+
+                consensus.strengths ??
+
+                [],
+
+
+
+            weaknesses:
+
+                backendIntel.weaknesses ??
+
+                consensus.risks ??
+
+                [],
+
+
+
+            explanations:
+
+                backendIntel.explanations ??
+
+                consensus.explanations ??
+
+                [],
+
+
+        };
+
+
+
+    },[data]);
+
+
+
+
+
+
+    console.log(
+
+        "========== DASHBOARD ==========",
+
+        data
+
+    );
+
+
+    console.log(
+
+        "INTELLIGENCE",
+
+        intelligence
+
+    );
+
+
+
+
+
+    if(error){
+
+
+        return (
+
+            <Alert severity="error">
+
+                Dashboard yüklenemedi.
+
+            </Alert>
 
         );
 
-        setData(res.data);
 
-    };
+    }
 
-    return(
+
+
+
+
+
+
+    return (
+
 
         <Box
+
             sx={{
-                p:3,
-                minHeight:"100vh",
-                bgcolor:"#090c10"
+
+                p:3
+
             }}
+
         >
 
-            <Grid
-                container
-                spacing={2}
+
+
+            <Typography
+
+                variant="h4"
+
+                fontWeight={700}
+
+                mb={3}
+
             >
 
-                <Grid item xs={12}>
+                🤖 BIST AI LAB v10
 
-                    <Paper
-                        className="card glow"
-                    >
+            </Typography>
 
-                        <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
 
-                            <Typography
-                                variant="h3"
-                            >
 
-                                BIST AI LAB
 
-                            </Typography>
 
-                            <Stack
-                                direction="row"
-                                spacing={2}
-                            >
+            <Grid
 
-                                <TextField
+                container
 
-                                    size="small"
+                spacing={2}
 
-                                    value={symbol}
+            >
 
-                                    onChange={(e)=>
 
-                                        setSymbol(
 
-                                            e.target.value.toUpperCase()
 
-                                        )
 
-                                    }
+                <Grid size={{xs:12,lg:3}}>
 
-                                />
 
-                                <Button
+                    <PortfolioPanel/>
 
-                                    variant="contained"
-
-                                    onClick={analyze}
-
-                                >
-
-                                    ANALYZE
-
-                                </Button>
-
-                            </Stack>
-
-                        </Stack>
-
-                    </Paper>
 
                 </Grid>
 
-                <Grid item xs={2.5}>
 
-                    <Paper
-                        className="card"
-                        sx={{
-                            height:850,
-                            overflow:"auto"
+
+
+
+
+
+                <Grid size={{xs:12,lg:4}}>
+
+
+                    <AIScoreCard
+
+
+                        loading={loading}
+
+
+                        data={{
+
+                            ...intelligence,
+
+                            consensus:data?.consensus ?? {}
+
                         }}
-                    >
 
-                        <PortfolioTable/>
 
-                    </Paper>
+                    />
+
+
+                </Grid>
+
+
+
+
+
+
+
+                <Grid size={{xs:12,lg:5}}>
+
+
+                    <NewsPanel
+
+
+                        news={
+
+                            data?.news?.news ?? []
+
+                        }
+
+
+                        loading={loading}
+
+
+                    />
+
 
                 </Grid>
 
-                <Grid item xs={9.5}>
 
-                    <Grid
-                        container
-                        spacing={2}
-                    >
 
-                        <Grid item xs={12}>
 
-                            <ScoreCard
-                                data={data}
-                            />
 
-                        </Grid>
 
-                        <Grid item xs={6}>
 
-                            <Paper
-                                className="card glow"
-                                sx={{
-                                    height:350
-                                }}
-                            >
+                <Grid size={{xs:12,lg:3}}>
 
-                                <RadarChart
-                                    data={data}
-                                />
 
-                            </Paper>
+                    <Stack spacing={2}>
 
-                        </Grid>
 
-                        <Grid item xs={6}>
+                        <KPICard
 
-                            <Paper
-                                className="card"
-                                sx={{
-                                    height:350,
-                                    overflow:"auto"
-                                }}
-                            >
+                            title="ML"
 
-                                <NewsPanel
-                                    symbol={symbol}
-                                />
+                            subtitle="Makine Öğrenmesi"
 
-                            </Paper>
+                            value={
 
-                        </Grid>
+                                intelligence.ml_score
 
-                        <Grid item xs={12}>
+                            }
 
-                            <Paper
-                                className="card"
-                                sx={{
-                                    height:260,
-                                    overflow:"auto"
-                                }}
-                            >
+                        />
 
-                                <ResearchPanel
-                                    symbol={symbol}
-                                />
 
-                            </Paper>
 
-                        </Grid>
+                        <KPICard
 
-                    </Grid>
+                            title="Technical"
+
+                            subtitle="Teknik Analiz"
+
+                            value={
+
+                                intelligence.technical_score
+
+                            }
+
+                        />
+
+
+
+                        <KPICard
+
+                            title="News"
+
+                            subtitle="AI Haber Analizi"
+
+                            value={
+
+                                intelligence.news_score
+
+                            }
+
+                        />
+
+
+
+                        <KPICard
+
+                            title="Research"
+
+                            subtitle="Araştırma Raporları"
+
+                            value={
+
+                                intelligence.research_score
+
+                            }
+
+                        />
+
+
+
+                        <KPICard
+
+                            title="KAP"
+
+                            subtitle="Kamuyu Aydınlatma"
+
+                            value={
+
+                                intelligence.kap_score
+
+                            }
+
+                        />
+
+
+                    </Stack>
+
 
                 </Grid>
+
+
+
+
+
+
+
+
+                <Grid size={{xs:12,lg:4}}>
+
+
+                    <RadarChart
+
+                        intelligence={intelligence}
+
+                    />
+
+
+                </Grid>
+
+
+
+
+
+
+
+                <Grid size={{xs:12,lg:5}}>
+
+
+                    <ResearchPanel
+
+
+                        reports={
+
+                            data?.research?.items ?? []
+
+                        }
+
+
+                        loading={loading}
+
+
+                    />
+
+
+                </Grid>
+
+
+
+
+
+
+
+                <Grid size={{xs:12,lg:8}}>
+
+
+                    <TradingChart
+
+                        symbol={selectedSymbol}
+
+                    />
+
+
+                </Grid>
+
+
+
+
+
+
+
+                <Grid size={{xs:12,lg:4}}>
+
+
+                    <KapPanel
+
+
+                        events={
+
+                            data?.kap?.items ?? []
+
+                        }
+
+
+                        loading={loading}
+
+
+                    />
+
+
+                </Grid>
+
+
+
+
+
 
             </Grid>
 
+
+
+
+
+
+
+
+            <Box mt={3}>
+
+
+                <StatusBar
+
+
+                    loadedAt={data?.loadedAt}
+
+
+                    version={data?.version?.version}
+
+
+                    modules={data?.modules}
+
+
+                />
+
+
+            </Box>
+
+
+
+
+
         </Box>
 
+
     );
+
+
+}
+
+
+
+
+
+
+
+export default function DashboardPage(){
+
+
+    return (
+
+
+        <DashboardProvider>
+
+
+            <DashboardContent/>
+
+
+        </DashboardProvider>
+
+
+    );
+
 
 }

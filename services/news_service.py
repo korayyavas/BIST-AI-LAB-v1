@@ -4,683 +4,269 @@ from __future__ import annotations
 services/news_service.py
 
 BIST AI LAB
-Professional AI News Engine v2
+Professional AI News Engine v2.1
 
-PART 1
+AI Translation Matching Fix
 """
 
-
-from dataclasses import asdict
-
+from dataclasses import asdict, dataclass, field
 
 import asyncio
 import hashlib
 import logging
 import re
+
 from collections import defaultdict
-from dataclasses import dataclass, field
+
 from datetime import datetime, timedelta
+
 from enum import Enum
+
 from typing import Any, Dict, Iterable, List, Optional, Set
+
 
 import httpx
 
+
 from data.google_news_provider import GoogleNewsProvider
+
 from services.news_ai_service import NewsAIService
+
 from services.sentiment_service import SentimentService
+
+
 
 logger = logging.getLogger(__name__)
 
 
-# ============================================================
-# CONSTANTS
-# ============================================================
+
 
 DEFAULT_TIMEOUT = 20
+
 CACHE_MINUTES = 10
+
 MAX_NEWS = 50
-MAX_TITLE_LENGTH = 500
 
 
-SYMBOL_MAP: Dict[str, str] = {
+
+
+SYMBOL_MAP = {
 
     "ASELS": "ASELSAN",
-    "ASELS.IS": "ASELSAN",
 
     "THYAO": "Turkish Airlines",
-    "THYAO.IS": "Turkish Airlines",
 
     "KCHOL": "Koç Holding",
-    "KCHOL.IS": "Koç Holding",
 
     "SISE": "Şişecam",
-    "SISE.IS": "Şişecam",
 
     "TUPRS": "Tüpraş",
-    "TUPRS.IS": "Tüpraş",
 
     "AKBNK": "Akbank",
-    "AKBNK.IS": "Akbank",
 
     "GARAN": "Garanti BBVA",
-    "GARAN.IS": "Garanti BBVA",
 
     "EREGL": "Erdemir",
-    "EREGL.IS": "Erdemir",
 
     "BIMAS": "BİM",
-    "BIMAS.IS": "BİM",
+
 }
 
 
-# ============================================================
-# ENUMS
-# ============================================================
 
 
 class NewsCategory(str, Enum):
 
-    COMPANY = "COMPANY"
+    COMPANY="COMPANY"
 
-    SECTOR = "SECTOR"
+    SECTOR="SECTOR"
 
-    MACRO = "MACRO"
+    MACRO="MACRO"
 
-    GEOPOLITICAL = "GEOPOLITICAL"
+    GEOPOLITICAL="GEOPOLITICAL"
 
-    OTHER = "OTHER"
-
-
-class MarketEffect(str, Enum):
-
-    POSITIVE = "POSITIVE"
-
-    NEGATIVE = "NEGATIVE"
-
-    NEUTRAL = "NEUTRAL"
-
-    UNKNOWN = "UNKNOWN"
+    OTHER="OTHER"
 
 
-class NewsSentiment(str, Enum):
 
-    POSITIVE = "POSITIVE"
-
-    NEGATIVE = "NEGATIVE"
-
-    NEUTRAL = "NEUTRAL"
-
-
-# ============================================================
-# DATA MODELS
-# ============================================================
 
 
 @dataclass(slots=True)
 class NewsArticle:
 
-    source: str
+    source:str
 
-    title: str
+    title:str
 
-    url: str
+    url:str
 
-    published: Optional[datetime] = None
+    published:Optional[datetime]=None
 
-    summary: str = ""
+    summary:str=""
 
-    language: str = "en"
+    raw:Dict[str,Any]=field(default_factory=dict)
 
-    symbol: str = ""
 
-    raw: Dict[str, Any] = field(default_factory=dict)
+
 
 
 @dataclass(slots=True)
 class AIAnalysis:
 
-    title_tr: str = ""
+    title_tr:str=""
 
-    summary: str = ""
+    summary:str=""
 
-    ai_comment: str = ""
+    ai_comment:str=""
 
-    market_effect: str = "UNKNOWN"
+    market_effect:str="UNKNOWN"
 
-    importance: int = 3
+    importance:int=3
 
 
-@dataclass(slots=True)
-class ScoreCard:
 
-    sentiment_score: float = 50
-
-    relevance_score: float = 40
-
-    ai_score: float = 60
-
-    final_score: float = 50
 
 
 @dataclass(slots=True)
 class NewsResult:
 
-    source: str
+    source:str
 
-    title: str
+    title:str
 
-    title_tr: str
+    title_tr:str
 
-    summary: str
+    summary:str
 
-    market_effect: str
+    market_effect:str
 
-    importance: int
+    importance:int
 
-    ai_comment: str
+    ai_comment:str
 
-    url: str
+    url:str
 
-    sentiment: str
+    sentiment:str
 
-    score: float
+    score:float
 
-    category: str
+    category:str
 
-    relevance: float
+    relevance:float
 
 
-# ============================================================
-# SIMPLE MEMORY CACHE
-# ============================================================
+
 
 
 class NewsCache:
 
+
     def __init__(self):
 
-        self._cache: Dict[str, Any] = {}
+        self.data={}
 
-        self._expires: Dict[str, datetime] = {}
+        self.expire={}
 
-    def _expired(self, key: str) -> bool:
 
-        exp = self._expires.get(key)
 
-        if exp is None:
-            return True
+    def get(self,key):
 
-        return datetime.utcnow() >= exp
-
-    def get(self, key: str):
-
-        if self._expired(key):
-
-            self._cache.pop(key, None)
-
-            self._expires.pop(key, None)
+        if key not in self.data:
 
             return None
 
-        return self._cache.get(key)
 
-    def put(
-        self,
-        key: str,
-        value: Any,
-        minutes: int = CACHE_MINUTES,
-    ):
+        if datetime.utcnow()>self.expire[key]:
 
-        self._cache[key] = value
+            self.data.pop(key,None)
 
-        self._expires[key] = (
-            datetime.utcnow()
-            + timedelta(minutes=minutes)
+            return None
+
+
+        return self.data[key]
+
+
+
+
+    def put(self,key,value):
+
+        self.data[key]=value
+
+        self.expire[key]=datetime.utcnow()+timedelta(
+
+            minutes=CACHE_MINUTES
+
         )
+
+
+
 
     def clear(self):
 
-        self._cache.clear()
+        self.data.clear()
 
-        self._expires.clear()
-
-
-# ============================================================
-# HTTP CLIENT
-# ============================================================
+        self.expire.clear()
 
 
-class HTTPClient:
-
-    def __init__(self):
-
-        self.client = httpx.Client(
-
-            timeout=DEFAULT_TIMEOUT,
-
-            follow_redirects=True,
-
-            headers={
-
-                "User-Agent":
-                "BIST AI LAB Professional News Engine"
-
-            }
-
-        )
-
-    def get(self, url: str):
-
-        return self.client.get(url)
-
-    def close(self):
-
-        self.client.close()
 
 
-# ============================================================
-# TEXT HELPERS
-# ============================================================
 
-
-_whitespace = re.compile(r"\s+")
-
-_html = re.compile(r"<[^>]+>")
-
-
-def normalize(text: str) -> str:
+def normalize(text):
 
     if not text:
 
         return ""
 
-    text = _html.sub("", text)
+    text=re.sub(
 
-    text = _whitespace.sub(" ", text)
+        r"\s+",
+
+        " ",
+
+        text
+
+    )
 
     return text.strip()
 
 
-def make_key(title: str) -> str:
+
+
+
+def make_key(text):
 
     return hashlib.md5(
 
-        normalize(title).lower().encode()
+        normalize(text).lower().encode()
 
     ).hexdigest()
 
 
-def unique_articles(
-    articles: Iterable[NewsArticle],
-) -> List[NewsArticle]:
 
-    seen: Set[str] = set()
 
-    result: List[NewsArticle] = []
+def unique_articles(items):
 
-    for article in articles:
+    seen=set()
 
-        key = make_key(article.title)
+    result=[]
+
+
+    for item in items:
+
+        key=make_key(item.title)
 
         if key in seen:
 
             continue
 
+
         seen.add(key)
 
-        result.append(article)
+        result.append(item)
+
+
 
     return result
-
-# ============================================================
-# CATEGORY ENGINE
-# ============================================================
-
-
-class CategoryEngine:
-
-    COMPANY_KEYWORDS = {
-
-        "aselsan",
-        "thy",
-        "thyao",
-        "turkish airlines",
-        "akbank",
-        "garan",
-        "garanti",
-        "koç",
-        "koc",
-        "holding",
-        "şişecam",
-        "sisecam",
-        "erdemir",
-        "eregl",
-        "tüpraş",
-        "tupras",
-        "bim",
-        "bimas",
-
-    }
-
-    SECTOR_KEYWORDS = {
-
-        "bank",
-
-        "banking",
-
-        "finance",
-
-        "financial",
-
-        "energy",
-
-        "oil",
-
-        "gas",
-
-        "steel",
-
-        "cement",
-
-        "aviation",
-
-        "airline",
-
-        "defense",
-
-        "savunma",
-
-        "drone",
-
-        "radar",
-
-        "missile",
-
-        "air defense",
-
-        "technology",
-
-        "chip",
-
-        "factory",
-
-    }
-
-    MACRO_KEYWORDS = {
-
-        "fed",
-
-        "ecb",
-
-        "tcmb",
-
-        "interest",
-
-        "inflation",
-
-        "economy",
-
-        "economic",
-
-        "gdp",
-
-        "growth",
-
-        "unemployment",
-
-        "employment",
-
-        "ppi",
-
-        "cpi",
-
-        "export",
-
-        "import",
-
-        "usd",
-
-        "eur",
-
-        "gold",
-
-        "oil price",
-
-    }
-
-    GEO_KEYWORDS = {
-
-        "war",
-
-        "ukraine",
-
-        "russia",
-
-        "china",
-
-        "iran",
-
-        "israel",
-
-        "nato",
-
-        "usa",
-
-        "sanction",
-
-        "conflict",
-
-        "missile",
-
-        "middle east",
-
-    }
-
-    @classmethod
-    def classify(cls, title: str):
-
-        t = normalize(title).lower()
-
-        if any(x in t for x in cls.COMPANY_KEYWORDS):
-
-            return NewsCategory.COMPANY, 100
-
-        if any(x in t for x in cls.SECTOR_KEYWORDS):
-
-            return NewsCategory.SECTOR, 85
-
-        if any(x in t for x in cls.MACRO_KEYWORDS):
-
-            return NewsCategory.MACRO, 70
-
-        if any(x in t for x in cls.GEO_KEYWORDS):
-
-            return NewsCategory.GEOPOLITICAL, 65
-
-        return NewsCategory.OTHER, 40
-
-
-# ============================================================
-# SCORE ENGINE
-# ============================================================
-
-
-class ScoreEngine:
-
-    SENTIMENT_WEIGHT = 0.50
-
-    RELEVANCE_WEIGHT = 0.30
-
-    AI_WEIGHT = 0.20
-
-    @classmethod
-    def calculate(
-
-        cls,
-
-        sentiment_score: float,
-
-        relevance: float,
-
-        importance: int,
-
-    ) -> ScoreCard:
-
-        ai_score = importance * 20
-
-        final = (
-
-            sentiment_score * cls.SENTIMENT_WEIGHT
-
-            + relevance * cls.RELEVANCE_WEIGHT
-
-            + ai_score * cls.AI_WEIGHT
-
-        )
-
-        return ScoreCard(
-
-            sentiment_score=sentiment_score,
-
-            relevance_score=relevance,
-
-            ai_score=ai_score,
-
-            final_score=round(final, 2),
-
-        )
-
-
-# ============================================================
-# GOOGLE PROVIDER ADAPTER
-# ============================================================
-
-
-class GoogleProvider:
-
-    def __init__(self):
-
-        self.provider = GoogleNewsProvider()
-
-    def search(
-
-        self,
-
-        keyword: str,
-
-    ) -> List[NewsArticle]:
-
-        raw = self.provider.search(keyword)
-
-        news: List[NewsArticle] = []
-
-        for item in raw:
-
-            title = normalize(
-
-                item.get("title", "")
-
-            )
-
-            if not title:
-
-                continue
-
-            source = item.get(
-
-                "source",
-
-                {},
-
-            )
-
-            if isinstance(source, dict):
-
-                source = source.get(
-
-                    "name",
-
-                    "Google",
-
-                )
-
-            news.append(
-
-                NewsArticle(
-
-                    source=str(source),
-
-                    title=title,
-
-                    url=item.get(
-
-                        "url",
-
-                        "",
-
-                    ),
-
-                    summary=item.get(
-
-                        "description",
-
-                        "",
-
-                    ),
-
-                    raw=item,
-
-                )
-
-            )
-
-        return unique_articles(news)
-
-
-# ============================================================
-# SENTIMENT ADAPTER
-# ============================================================
-
-
-class SentimentEngine:
-
-    def __init__(self):
-
-        self.service = SentimentService()
-
-    def analyze(
-
-        self,
-
-        article: NewsArticle,
-
-    ):
-
-        try:
-
-            return self.service.analyze(
-
-                article.title
-
-            )
-
-        except Exception:
-
-            logger.exception(
-
-                "Sentiment failed"
-
-            )
-
-            return {
-
-                "sentiment": "NEUTRAL",
-
-                "score": 50,
-
-            }
-
-
 # ============================================================
 # AI ENGINE
 # ============================================================
@@ -688,45 +274,54 @@ class SentimentEngine:
 
 class AIEngine:
 
+
     def __init__(self):
 
         self.service = NewsAIService()
 
-    def analyze(
 
-        self,
 
-        titles: List[str],
+    def analyze(self, titles):
 
-    ) -> List[AIAnalysis]:
 
         if not titles:
 
             return []
 
+
+
         try:
 
-            result = self.service.analyze(
+            response = self.service.analyze(
 
                 titles
 
             )
 
-        except Exception:
+
+        except Exception as e:
+
 
             logger.exception(
 
-                "AI analyze failed"
+                "AI news analysis failed %s",
+
+                e
 
             )
 
-            result = []
+            return []
 
-        analyses: List[AIAnalysis] = []
 
-        for item in result:
 
-            analyses.append(
+        result=[]
+
+
+
+        for item in response:
+
+
+            result.append(
 
                 AIAnalysis(
 
@@ -734,7 +329,7 @@ class AIEngine:
 
                         "title_tr",
 
-                        "",
+                        ""
 
                     ),
 
@@ -742,7 +337,7 @@ class AIEngine:
 
                         "summary",
 
-                        "",
+                        ""
 
                     ),
 
@@ -750,7 +345,7 @@ class AIEngine:
 
                         "ai_comment",
 
-                        "",
+                        ""
 
                     ),
 
@@ -758,7 +353,7 @@ class AIEngine:
 
                         "market_effect",
 
-                        "UNKNOWN",
+                        "UNKNOWN"
 
                     ),
 
@@ -768,91 +363,220 @@ class AIEngine:
 
                             "importance",
 
-                            3,
+                            3
 
                         )
 
-                    ),
+                    )
 
                 )
 
             )
 
-        return analyses
 
+        return result
+
+
+
+
+
+
+
+# ============================================================
+# AI MATCH ENGINE
+# ============================================================
+
+
+class AIMatchEngine:
+
+
+    @staticmethod
+    def match(
+
+        article,
+
+        ai_results
+
+    ):
+
+
+        if not ai_results:
+
+            return None
+
+
+
+        source_title = normalize(
+
+            article.title
+
+        ).lower()
+
+
+
+        best=None
+
+        score=0
+
+
+
+        for item in ai_results:
+
+
+            ai_title = normalize(
+
+                item.title_tr
+
+            ).lower()
+
+
+
+            if not ai_title:
+
+                continue
+
+
+
+            current=0
+
+
+
+            words = ai_title.split()
+
+
+
+            for word in words:
+
+
+                if word in source_title:
+
+                    current += 1
+
+
+
+            if current > score:
+
+
+                score=current
+
+                best=item
+
+
+
+
+        return best
+
+# ============================================================
+# CATEGORY ENGINE
+# ============================================================
+
+class CategoryEngine:
+
+
+    @staticmethod
+    def classify(title):
+
+
+        text = normalize(title).lower()
+
+
+        if any(
+            x in text
+            for x in [
+                "aselsan",
+                "şirket",
+                "company",
+                "contract",
+                "agreement",
+                "sözleşme"
+            ]
+        ):
+
+            return (
+                NewsCategory.COMPANY,
+                90
+            )
+
+
+
+        if any(
+            x in text
+            for x in [
+                "nato",
+                "savunma",
+                "defense",
+                "military",
+                "drone"
+            ]
+        ):
+
+            return (
+                NewsCategory.SECTOR,
+                80
+            )
+
+
+
+        if any(
+            x in text
+            for x in [
+                "enflasyon",
+                "faiz",
+                "merkez bankası",
+                "fed",
+                "ecb"
+            ]
+        ):
+
+            return (
+                NewsCategory.MACRO,
+                70
+            )
+
+
+
+        if any(
+            x in text
+            for x in [
+                "savaş",
+                "kriz",
+                "jeopolitik",
+                "geopolitical"
+            ]
+        ):
+
+            return (
+                NewsCategory.GEOPOLITICAL,
+                75
+            )
+
+
+        return (
+
+            NewsCategory.OTHER,
+
+            50
+
+        )    
     # ============================================================
-# NEWS AGGREGATOR
-# ============================================================
-
-
-class NewsAggregator:
-
-    def __init__(self):
-
-        self.google = GoogleProvider()
-
-    def collect(
-
-        self,
-
-        keyword: str,
-
-    ) -> List[NewsArticle]:
-
-        articles: List[NewsArticle] = []
-
-        try:
-
-            articles.extend(
-
-                self.google.search(
-
-                    keyword
-
-                )
-
-            )
-
-        except Exception:
-
-            logger.exception(
-
-                "Google provider failed"
-
-            )
-
-        articles = unique_articles(
-
-            articles
-
-        )
-
-        articles.sort(
-
-            key=lambda x: x.title
-
-        )
-
-        return articles
-
-
-# ============================================================
 # RESULT BUILDER
 # ============================================================
 
 
 class ResultBuilder:
 
+
     @staticmethod
     def build(
 
-        article: NewsArticle,
+        article,
 
-        sentiment: Dict[str, Any],
+        sentiment,
 
-        ai: Optional[AIAnalysis],
+        ai,
 
-    ) -> NewsResult:
+    ):
+
 
         category, relevance = (
 
@@ -864,6 +588,7 @@ class ResultBuilder:
 
         )
 
+
         importance = (
 
             ai.importance
@@ -874,7 +599,9 @@ class ResultBuilder:
 
         )
 
-        score = ScoreEngine.calculate(
+
+
+        score = (
 
             float(
 
@@ -882,17 +609,19 @@ class ResultBuilder:
 
                     "score",
 
-                    50,
+                    50
 
                 )
 
-            ),
+            )
 
-            relevance,
+            + relevance
 
-            importance,
+            + (importance * 10)
 
-        )
+        ) / 3
+
+
 
         return NewsResult(
 
@@ -900,49 +629,94 @@ class ResultBuilder:
 
             title=article.title,
 
+
             title_tr=(
+
                 ai.title_tr
+
                 if ai and ai.title_tr
+
                 else article.title
+
             ),
+
+
 
             summary=(
+
                 ai.summary
-                if ai
+
+                if ai and ai.summary
+
                 else article.summary
+
             ),
 
+
+
             market_effect=(
+
                 ai.market_effect
+
                 if ai
+
                 else "UNKNOWN"
+
             ),
+
+
 
             importance=importance,
 
+
+
             ai_comment=(
+
                 ai.ai_comment
+
                 if ai
+
                 else ""
+
             ),
 
+
+
             url=article.url,
+
+
 
             sentiment=sentiment.get(
 
                 "sentiment",
 
-                "NEUTRAL",
+                "NEUTRAL"
 
             ),
 
-            score=score.final_score,
+
+
+            score=round(
+
+                score,
+
+                2
+
+            ),
+
+
 
             category=category.value,
+
+
 
             relevance=relevance,
 
         )
+
+
+
+
 
 
 # ============================================================
@@ -952,109 +726,173 @@ class ResultBuilder:
 
 class NewsService:
 
+
     def __init__(self):
 
-        self.cache = NewsCache()
 
-        self.sentiment = SentimentEngine()
+        self.cache=NewsCache()
 
-        self.ai = AIEngine()
 
-        self.aggregator = NewsAggregator()
+        self.ai=AIEngine()
 
-    # --------------------------------------------------------
 
-    def _keyword(
+        self.sentiment=SentimentService()
 
-        self,
 
-        symbol: str,
 
-    ) -> str:
+    def keyword(self,symbol):
+
 
         return SYMBOL_MAP.get(
 
             symbol.upper(),
 
-            symbol,
-
-        )
-
-    # --------------------------------------------------------
-
-    def _cache_key(
-
-        self,
-
-        symbol: str,
-
-    ) -> str:
-
-        return symbol.upper()
-
-    # --------------------------------------------------------
-
-    def get_news(
-
-        self,
-
-        symbol: str,
-
-    ) -> List[NewsResult]:
-
-        key = self._cache_key(
-
             symbol
 
         )
 
-        cached = self.cache.get(
 
-            key
 
-        )
+
+    def get_news(self,symbol):
+
+
+        key=symbol.upper()
+
+
+
+        cached=self.cache.get(key)
+
 
         if cached is not None:
 
             return cached
 
-        keyword = self._keyword(
 
-            symbol
 
-        )
+
+        keyword=self.keyword(symbol)
+
+
 
         logger.info(
 
             "Searching news for %s",
 
-            keyword,
+            keyword
 
         )
 
-        articles = (
 
-            self.aggregator.collect(
 
-                keyword
+        provider=GoogleNewsProvider()
 
-            )
+
+
+        raw=provider.search(
+
+            keyword
 
         )
 
-        if not articles:
 
-            self.cache.put(
 
-                key,
+        articles=[]
 
-                [],
+
+
+        for item in raw:
+
+
+            articles.append(
+
+                NewsArticle(
+
+                    source=item.get(
+
+                        "source",
+
+                        "Google"
+
+                    )
+
+                    if isinstance(
+
+                        item.get("source"),
+
+                        str
+
+                    )
+
+                    else item.get(
+
+                        "source",
+
+                        {}
+
+                    ).get(
+
+                        "name",
+
+                        "Google"
+
+                    ),
+
+
+
+                    title=normalize(
+
+                        item.get(
+
+                            "title",
+
+                            ""
+
+                        )
+
+                    ),
+
+
+
+                    url=item.get(
+
+                        "url",
+
+                        ""
+
+                    ),
+
+
+
+                    summary=item.get(
+
+                        "description",
+
+                        ""
+
+                    ),
+
+
+
+                    raw=item
+
+                )
 
             )
 
-            return []
 
-        titles = [
+
+
+
+        articles=unique_articles(
+
+            articles
+
+        )
+
+
+
+        titles=[
 
             x.title
 
@@ -1062,39 +900,43 @@ class NewsService:
 
         ]
 
-        ai_results = self.ai.analyze(
+
+
+
+        ai_results=self.ai.analyze(
 
             titles
 
         )
 
-        results: List[NewsResult] = []
 
-        for index, article in enumerate(
 
-            articles
 
-        ):
+        results=[]
 
-            sentiment = (
 
-                self.sentiment.analyze(
 
-                    article
+        for article in articles:
 
-                )
+
+
+            sentiment=self.sentiment.analyze(
+
+                article.title
+
+            )
+
+
+
+            ai=AIMatchEngine.match(
+
+                article,
+
+                ai_results
 
             )
 
-            ai = (
 
-                ai_results[index]
-
-                if index < len(ai_results)
-
-                else None
-
-            )
 
             results.append(
 
@@ -1104,94 +946,73 @@ class NewsService:
 
                     sentiment,
 
-                    ai,
+                    ai
 
                 )
 
             )
 
+
+
+
         results.sort(
 
-            key=lambda x: (
+            key=lambda x:x.score,
 
-                x.score,
-
-                x.relevance,
-
-                x.importance,
-
-            ),
-
-            reverse=True,
+            reverse=True
 
         )
 
-        if len(results) > MAX_NEWS:
 
-            results = results[:MAX_NEWS]
+
+        results=results[:50]
+
+
 
         self.cache.put(
 
             key,
 
-            results,
+            results
 
         )
+
+
 
         logger.info(
 
-            "%d news returned",
+            "%s news returned",
 
-            len(results),
+            len(results)
 
         )
 
+
+
         return results
 
-    # --------------------------------------------------------
 
-    def clear_cache(self):
 
-        self.cache.clear()
-
-    # --------------------------------------------------------
-
-    def health(self):
-
-        return {
-
-            "service": "news",
-
-            "status": "ok",
-
-            "provider": "Google News",
-
-            "cache_entries": len(
-
-                self.cache._cache
-
-            ),
-
-        }
 
 
 # ============================================================
 # SINGLETON
 # ============================================================
 
-news_service = NewsService()
+
+news_service=NewsService()
+
+
+
+
 
 
 # ============================================================
-# PUBLIC API
+# EXPORT
 # ============================================================
 
 
-def get_news(
-
-    symbol: str,
-
-) -> List[NewsResult]:
+def get_news(symbol):
 
     return news_service.get_news(
 
@@ -1200,969 +1021,95 @@ def get_news(
     )
 
 
+
+
+
+def news_dashboard(symbol):
+
+
+    items=get_news(symbol)
+
+
+
+    return {
+
+
+        "symbol":symbol.upper(),
+
+
+        "news":[
+
+            asdict(x)
+
+            for x in items
+
+        ],
+
+
+
+        "statistics":{
+
+
+            "total":len(items)
+
+
+        },
+
+
+
+        "generated_at":
+
+        datetime.utcnow().isoformat()
+
+    }
+
+
+
+
+
 def clear_news_cache():
 
-    news_service.clear_cache()
+    news_service.cache.clear()
+
+
 
 
 def news_health():
 
-    return news_service.health()
-
-# ============================================================
-# ADVANCED FILTERS
-# ============================================================
-
-
-class NewsFilter:
-
-    @staticmethod
-    def remove_empty(
-
-        news: List[NewsResult],
-
-    ) -> List[NewsResult]:
-
-        return [
-
-            x
-
-            for x in news
-
-            if x.title.strip()
-
-        ]
-
-    @staticmethod
-    def remove_duplicate_titles(
-
-        news: List[NewsResult],
-
-    ) -> List[NewsResult]:
-
-        seen = set()
-
-        result = []
-
-        for item in news:
-
-            key = normalize(
-
-                item.title
-
-            ).lower()
-
-            if key in seen:
-
-                continue
-
-            seen.add(key)
-
-            result.append(item)
-
-        return result
-
-    @staticmethod
-    def minimum_score(
-
-        news: List[NewsResult],
-
-        score: float,
-
-    ) -> List[NewsResult]:
-
-        return [
-
-            x
-
-            for x in news
-
-            if x.score >= score
-
-        ]
-
-    @staticmethod
-    def category(
-
-        news: List[NewsResult],
-
-        category: NewsCategory,
-
-    ):
-
-        return [
-
-            x
-
-            for x in news
-
-            if x.category == category.value
-
-        ]
-
-    @staticmethod
-    def sentiment(
-
-        news: List[NewsResult],
-
-        sentiment: str,
-
-    ):
-
-        sentiment = sentiment.upper()
-
-        return [
-
-            x
-
-            for x in news
-
-            if x.sentiment.upper()
-
-            == sentiment
-
-        ]
-
-
-# ============================================================
-# TREND ENGINE
-# ============================================================
-
-
-class TrendEngine:
-
-    STOP_WORDS = {
-
-        "the",
-
-        "and",
-
-        "of",
-
-        "for",
-
-        "with",
-
-        "from",
-
-        "will",
-
-        "after",
-
-        "about",
-
-        "this",
-
-        "that",
-
-        "into",
-
-        "have",
-
-        "has",
-
-        "had",
-
-        "more",
-
-        "less",
-
-        "its",
-
-        "their",
-
-        "they",
-
-        "his",
-
-        "her",
-
-        "our",
-
-        "new",
-
-        "shares",
-
-        "stock",
-
-        "company",
-
-    }
-
-    @classmethod
-    def keywords(
-
-        cls,
-
-        news: List[NewsResult],
-
-        top: int = 20,
-
-    ):
-
-        words = defaultdict(int)
-
-        for item in news:
-
-            tokens = re.findall(
-
-                r"[A-Za-zÇĞİÖŞÜçğıöşü0-9]{3,}",
-
-                item.title,
-
-            )
-
-            for token in tokens:
-
-                token = token.lower()
-
-                if token in cls.STOP_WORDS:
-
-                    continue
-
-                words[token] += 1
-
-        return sorted(
-
-            words.items(),
-
-            key=lambda x: x[1],
-
-            reverse=True,
-
-        )[:top]
-
-
-# ============================================================
-# STATISTICS
-# ============================================================
-
-
-class NewsStatistics:
-
-    @staticmethod
-    def summary(
-
-        news: List[NewsResult],
-
-    ):
-
-        stats = {
-
-            "total": len(news),
-
-            "positive": 0,
-
-            "negative": 0,
-
-            "neutral": 0,
-
-            "average_score": 0,
-
-            "categories": defaultdict(int),
-
-        }
-
-        total_score = 0.0
-
-        for item in news:
-
-            total_score += item.score
-
-            s = item.sentiment.upper()
-
-            if s == "POSITIVE":
-
-                stats["positive"] += 1
-
-            elif s == "NEGATIVE":
-
-                stats["negative"] += 1
-
-            else:
-
-                stats["neutral"] += 1
-
-            stats["categories"][
-
-                item.category
-
-            ] += 1
-
-        if news:
-
-            stats["average_score"] = round(
-
-                total_score / len(news),
-
-                2,
-
-            )
-
-        stats["categories"] = dict(
-
-            stats["categories"]
-
-        )
-
-        return stats
-
-
-# ============================================================
-# EXPORTERS
-# ============================================================
-
-
-class NewsExporter:
-
-    @staticmethod
-    def to_dict(
-
-        news: List[NewsResult],
-
-    ):
-
-        return [
-
-            {
-
-                "source": x.source,
-
-                "title": x.title,
-
-                "title_tr": x.title_tr,
-
-                "summary": x.summary,
-
-                "market_effect": x.market_effect,
-
-                "importance": x.importance,
-
-                "ai_comment": x.ai_comment,
-
-                "url": x.url,
-
-                "sentiment": x.sentiment,
-
-                "score": x.score,
-
-                "category": x.category,
-
-                "relevance": x.relevance,
-
-            }
-
-            for x in news
-
-        ]
-
-    @staticmethod
-    def dataframe(
-
-        news: List[NewsResult],
-
-    ):
-
-        try:
-
-            import pandas as pd
-
-            return pd.DataFrame(
-
-                NewsExporter.to_dict(
-
-                    news
-
-                )
-
-            )
-
-        except Exception:
-
-            logger.exception(
-
-                "Pandas export failed"
-
-            )
-
-            return None
-
-        # ============================================================
-# ASYNC API
-# ============================================================
-
-
-class AsyncNewsService:
-
-    def __init__(self):
-
-        self.service = news_service
-
-    async def get_news(
-
-        self,
-
-        symbol: str,
-
-    ) -> List[NewsResult]:
-
-        return await asyncio.to_thread(
-
-            self.service.get_news,
-
-            symbol,
-
-        )
-
-    async def health(self):
-
-        return await asyncio.to_thread(
-
-            self.service.health
-
-        )
-
-
-async_news_service = AsyncNewsService()
-
-
-# ============================================================
-# SEARCH
-# ============================================================
-
-
-def search_news(
-
-    symbol: str,
-
-    minimum_score: float = 0,
-
-    category: Optional[NewsCategory] = None,
-
-    sentiment: Optional[str] = None,
-
-) -> List[NewsResult]:
-
-    news = get_news(symbol)
-
-    news = NewsFilter.remove_empty(news)
-
-    news = NewsFilter.remove_duplicate_titles(news)
-
-    if minimum_score > 0:
-
-        news = NewsFilter.minimum_score(
-
-            news,
-
-            minimum_score,
-
-        )
-
-    if category:
-
-        news = NewsFilter.category(
-
-            news,
-
-            category,
-
-        )
-
-    if sentiment:
-
-        news = NewsFilter.sentiment(
-
-            news,
-
-            sentiment,
-
-        )
-
-    return news
-
-
-# ============================================================
-# DASHBOARD API
-# ============================================================
-
-
-def dashboard(
-
-    symbol: str,
-
-) -> Dict[str, Any]:
-
-    news = get_news(symbol)
 
     return {
 
-        "symbol": symbol,
 
-        "news": NewsExporter.to_dict(
+        "service":"news",
 
-            news
-
-        ),
-
-        "statistics": NewsStatistics.summary(
-
-            news
-
-        ),
-
-        "trending": TrendEngine.keywords(
-
-            news
-
-        ),
-
-        "generated_at": datetime.utcnow().isoformat(),
+        "status":"ok"
 
     }
 
 
-# ============================================================
-# TEST
-# ============================================================
 
 
-if __name__ == "__main__":
-
-    logging.basicConfig(
-
-        level=logging.INFO,
-
-        format="%(levelname)s | %(message)s",
-
-    )
-
-    symbol = "ASELS"
-
-    result = dashboard(symbol)
-
-    print("=" * 80)
-
-    print("NEWS ENGINE")
-
-    print("=" * 80)
-
-    print(
-
-        "News:",
-
-        len(result["news"]),
-
-    )
-
-    print(
-
-        "Statistics:",
-
-        result["statistics"],
-
-    )
-
-    print(
-
-        "Trending:",
-
-        result["trending"][:10],
-
-    )
-
-    print("=" * 80)
-
-    for item in result["news"][:5]:
-
-        print()
-
-        print(item["title"])
-
-        print(item["title_tr"])
-
-        print(item["score"])
-
-        print(item["sentiment"])
-
-        print(item["market_effect"])
-
-        print(item["url"])
-
-
-# ============================================================
-# EXPORTS
-# ============================================================
-
-__all__ = [
-
-    "NewsArticle",
-
-    "NewsResult",
+__all__=[
 
     "NewsService",
 
-    "NewsFilter",
-
-    "NewsStatistics",
-
-    "NewsExporter",
-
-    "TrendEngine",
-
-    "CategoryEngine",
-
-    "ScoreEngine",
-
-    "NewsCache",
-
-    "NewsCategory",
-
-    "NewsSentiment",
-
-    "MarketEffect",
-
-    "news_service",
-
-    "async_news_service",
+    "NewsResult",
 
     "get_news",
 
     "search_news",
 
-    "dashboard",
+    "news_dashboard",
 
     "clear_news_cache",
 
-    "news_health",
-
-    "news_dashboard",
+    "news_health"
 
 ]
+def search_news(symbol):
 
-# ============================================================
-# FUTURE EXTENSIONS
-# ============================================================
+    return news_service.get_news(
 
+        symbol
 
-class NewsMetrics:
-
-    @staticmethod
-    def average_score(news: List[NewsResult]) -> float:
-
-        if not news:
-
-            return 0.0
-
-        return round(
-
-            sum(x.score for x in news)
-
-            / len(news),
-
-            2,
-
-        )
-
-    @staticmethod
-    def strongest_positive(
-
-        news: List[NewsResult],
-
-    ) -> Optional[NewsResult]:
-
-        positive = [
-
-            x
-
-            for x in news
-
-            if x.sentiment.upper()
-
-            == "POSITIVE"
-
-        ]
-
-        if not positive:
-
-            return None
-
-        return max(
-
-            positive,
-
-            key=lambda x: x.score,
-
-        )
-
-    @staticmethod
-    def strongest_negative(
-
-        news: List[NewsResult],
-
-    ) -> Optional[NewsResult]:
-
-        negative = [
-
-            x
-
-            for x in news
-
-            if x.sentiment.upper()
-
-            == "NEGATIVE"
-
-        ]
-
-        if not negative:
-
-            return None
-
-        return min(
-
-            negative,
-
-            key=lambda x: x.score,
-
-        )
-
-
-# ============================================================
-# SYMBOL SUMMARY
-# ============================================================
-
-
-def symbol_summary(
-
-    symbol: str,
-
-) -> Dict[str, Any]:
-
-    news = get_news(symbol)
-
-    stats = NewsStatistics.summary(news)
-
-    return {
-
-        "symbol": symbol,
-
-        "news_count": len(news),
-
-        "average_score": NewsMetrics.average_score(news),
-
-        "best_news": NewsMetrics.strongest_positive(news),
-
-        "worst_news": NewsMetrics.strongest_negative(news),
-
-        "statistics": stats,
-
-        "top_keywords": TrendEngine.keywords(news, 10),
-
-    }
-
-
-# ============================================================
-# DASHBOARD WIDGET DATA
-# ============================================================
-
-
-def dashboard_widget(
-
-    symbol: str,
-
-) -> Dict[str, Any]:
-
-    news = get_news(symbol)
-
-    return {
-
-        "headline_count": len(news),
-
-        "average_score": NewsMetrics.average_score(news),
-
-        "positive":
-
-            len(
-
-                NewsFilter.sentiment(
-
-                    news,
-
-                    "POSITIVE",
-
-                )
-
-            ),
-
-        "negative":
-
-            len(
-
-                NewsFilter.sentiment(
-
-                    news,
-
-                    "NEGATIVE",
-
-                )
-
-            ),
-
-        "neutral":
-
-            len(
-
-                NewsFilter.sentiment(
-
-                    news,
-
-                    "NEUTRAL",
-
-                )
-
-            ),
-
-        "top5":
-
-            NewsExporter.to_dict(
-
-                news[:5]
-
-            ),
-
-    }
-
-def calculate_statistics(items):
-
-    total = len(items)
-
-    positive = 0
-    negative = 0
-    neutral = 0
-
-    scores = []
-    categories = {}
-
-
-    for item in items:
-
-
-        # NewsResult nesnesi ise
-        sentiment = getattr(
-            item,
-            "sentiment",
-            None
-        )
-
-        score = getattr(
-            item,
-            "score",
-            None
-        )
-
-        category = getattr(
-            item,
-            "category",
-            None
-        )
-
-
-        # Dict ise
-        if isinstance(item, dict):
-
-            sentiment = item.get(
-                "sentiment",
-                sentiment
-            )
-
-            score = item.get(
-                "score",
-                score
-            )
-
-            category = item.get(
-                "category",
-                category
-            )
-
-
-        sentiment = str(
-            sentiment or "NEUTRAL"
-        ).upper()
-
-
-
-        if sentiment == "POSITIVE":
-
-            positive += 1
-
-
-        elif sentiment == "NEGATIVE":
-
-            negative += 1
-
-
-        else:
-
-            neutral += 1
-
-
-
-        try:
-
-            scores.append(
-                float(score)
-            )
-
-        except:
-
-            scores.append(50)
-
-
-
-        category = category or "OTHER"
-
-
-        categories[category] = (
-            categories.get(category,0)+1
-        )
-
-
-
-    return {
-
-        "total": total,
-
-        "positive": positive,
-
-        "negative": negative,
-
-        "neutral": neutral,
-
-        "average_score":
-            round(
-                sum(scores)/len(scores),
-                2
-            ) if scores else 50,
-
-        "categories": categories
-
-    }
-# ============================================================
-# END OF FILE
-# ============================================================
-def news_dashboard(symbol: str):
-
-    items = get_news(
-        symbol.upper()
     )
-
-    return {
-        "symbol": symbol.upper(),
-        "news": [
-            asdict(item)
-            for item in items
-        ],
-        "statistics": calculate_statistics(items),
-        "generated_at": datetime.utcnow().isoformat()
-    }

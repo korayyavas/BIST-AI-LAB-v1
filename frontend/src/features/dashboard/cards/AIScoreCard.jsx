@@ -9,35 +9,50 @@ import {
     List,
     ListItem,
     ListItemText,
+    LinearProgress,
 } from "@mui/material";
+
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 
 
+
 export default function AIScoreCard({
 
-    loading = false,
+    loading=false,
 
-    data = {},
+    data={},
 
-}) {
+}){
 
-    if (loading) {
+
+    if(loading){
 
         return (
 
             <Paper
+
                 sx={{
-                    height: 520,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+
+                    height:360,
+
+                    display:"flex",
+
+                    justifyContent:"center",
+
+                    alignItems:"center",
+
+                    bgcolor:"#10151d",
+
+                    borderRadius:4,
+
                 }}
+
             >
 
-                <CircularProgress />
+                <CircularProgress/>
 
             </Paper>
 
@@ -45,103 +60,218 @@ export default function AIScoreCard({
 
     }
 
+
+
+
+
     const score = Number(
 
         data.ai_score ??
 
         data.score ??
 
-        0,
+        0
 
     );
+
+
+
 
     const decision =
 
         data.decision ??
 
-        data.recommendation ??
-
         "HOLD";
+
+
+
 
     const confidence = Number(
 
         data.confidence ??
 
-        50,
+        50
 
     );
 
+
+
+
+
     const strengths =
 
-        data.strengths ??
+        Array.isArray(data.strengths)
+
+        ?
+
+        data.strengths
+
+        :
 
         [];
+
+
+
+
 
     const weaknesses =
 
-        data.weaknesses ??
+        Array.isArray(data.weaknesses)
+
+        ?
+
+        data.weaknesses
+
+        :
 
         [];
 
-    const explanations =
+
+
+
+
+    let explanations =
 
         data.explanations ??
 
         [];
 
-    let color = "#FFC107";
 
-    let icon = <RemoveIcon />;
 
-    if (decision.includes("BUY")) {
 
-        color = "#00C853";
 
-        icon = <TrendingUpIcon />;
+    if(typeof explanations==="string"){
+
+        explanations = explanations
+
+            .split("|")
+
+            .map(x=>x.trim())
+
+            .filter(Boolean);
+
+    }
+
+
+
+
+
+
+    const scores=[
+
+
+        {
+            name:"ML",
+            value:Number(data.ml_score ?? 0)
+        },
+
+        {
+            name:"Technical",
+            value:Number(data.technical_score ?? 0)
+        },
+
+        {
+            name:"News",
+            value:Number(data.news_score ?? 0)
+        },
+
+        {
+            name:"Research",
+            value:Number(data.research_score ?? 0)
+        },
+
+        {
+            name:"KAP",
+            value:Number(data.kap_score ?? 0)
+        },
+
+
+    ];
+
+
+
+
+
+
+
+    let color="#FFC107";
+
+    let icon=<RemoveIcon/>;
+
+
+
+
+
+    if(decision.includes("BUY")){
+
+        color="#00C853";
+
+        icon=<TrendingUpIcon/>;
 
     }
 
-    if (decision.includes("SELL")) {
 
-        color = "#F44336";
 
-        icon = <TrendingDownIcon />;
+
+
+    if(decision.includes("SELL")){
+
+        color="#F44336";
+
+        icon=<TrendingDownIcon/>;
 
     }
+
+
+
+
+
+
 
     return (
 
+
         <Paper
+
 
             sx={{
 
-                p: 3,
 
-                height: 520,
+                height:360,
 
-                background: "#10151d",
+                p:2,
 
-                border: "1px solid #243041",
+                bgcolor:"#10151d",
 
-                borderRadius: 4,
+                border:"1px solid #243041",
+
+                borderRadius:4,
+
+                overflow:"hidden",
+
 
             }}
 
+
+
         >
 
-            <Stack
 
-                spacing={2}
 
-                alignItems="center"
+            <Stack spacing={1} height="100%">
 
-            >
+
+
+
+
 
                 <Typography
 
-                    variant="h5"
+                    variant="h6"
 
                     fontWeight={700}
+
+                    textAlign="center"
 
                 >
 
@@ -149,17 +279,27 @@ export default function AIScoreCard({
 
                 </Typography>
 
+
+
+
+
+
+
                 <Box
 
                     sx={{
 
-                        position: "relative",
+                        position:"relative",
 
-                        display: "inline-flex",
+                        display:"inline-flex",
+
+                        alignSelf:"center"
 
                     }}
 
                 >
+
+
 
                     <CircularProgress
 
@@ -167,53 +307,58 @@ export default function AIScoreCard({
 
                         value={100}
 
-                        size={170}
+                        size={110}
 
-                        thickness={2}
+                        thickness={5}
 
                         sx={{
 
-                            color: "#263238",
+                            color:"#263238",
 
-                            position: "absolute",
+                            position:"absolute"
 
                         }}
 
                     />
+
+
 
                     <CircularProgress
 
                         variant="determinate"
 
-                        value={score}
+                        value={Math.min(score,100)}
 
-                        size={170}
+                        size={110}
 
-                        thickness={6}
+                        thickness={5}
 
                         sx={{
 
-                            color,
+                            color
 
                         }}
 
                     />
 
+
+
+
                     <Box
 
                         sx={{
 
-                            inset: 0,
+                            inset:0,
 
-                            position: "absolute",
+                            position:"absolute",
 
-                            display: "flex",
+                            display:"flex",
 
-                            flexDirection: "column",
+                            justifyContent:"center",
 
-                            justifyContent: "center",
+                            alignItems:"center",
 
-                            alignItems: "center",
+                            flexDirection:"column"
 
                         }}
 
@@ -221,7 +366,7 @@ export default function AIScoreCard({
 
                         <Typography
 
-                            variant="h2"
+                            variant="h4"
 
                             fontWeight={700}
 
@@ -231,15 +376,29 @@ export default function AIScoreCard({
 
                         </Typography>
 
-                        <Typography>
+
+                        <Typography
+
+                            fontSize={10}
+
+                        >
 
                             AI SCORE
 
                         </Typography>
 
+
                     </Box>
 
+
                 </Box>
+
+
+
+
+
+
+
 
                 <Chip
 
@@ -247,159 +406,311 @@ export default function AIScoreCard({
 
                     label={decision}
 
+                    size="small"
+
                     sx={{
 
-                        bgcolor: color,
+                        alignSelf:"center",
 
-                        color: "#fff",
+                        bgcolor:color,
 
-                        fontWeight: 700,
+                        color:"#fff",
+
+                        fontWeight:700
 
                     }}
 
                 />
 
-                <Typography>
+
+
+
+
+
+
+                <Typography
+
+                    textAlign="center"
+
+                    fontSize={13}
+
+                >
 
                     Confidence : {confidence.toFixed(1)}%
 
                 </Typography>
 
-                <Divider flexItem />
 
-                <Box width="100%">
 
-                    <Typography
 
-                        variant="subtitle2"
 
-                        gutterBottom
 
-                    >
+                <Divider/>
+
+
+
+
+
+
+                <Typography
+
+                    variant="caption"
+
+                    fontWeight={700}
+
+                >
+
+                    📊 AI COMPONENT SCORES
+
+                </Typography>
+
+
+
+
+
+
+
+                <Stack spacing={0.3}>
+
+
+                    {
+
+                    scores.map((item,index)=>(
+
+
+                        <Box key={index}>
+
+
+                            <Box
+
+                                display="flex"
+
+                                justifyContent="space-between"
+
+                            >
+
+                                <Typography fontSize={11}>
+
+                                    {item.name}
+
+                                </Typography>
+
+
+                                <Typography fontSize={11}>
+
+                                    {item.value.toFixed(1)}
+
+                                </Typography>
+
+
+                            </Box>
+
+
+
+
+                            <LinearProgress
+
+                                variant="determinate"
+
+                                value={Math.min(item.value,100)}
+
+                                sx={{
+
+                                    height:3
+
+                                }}
+
+                            />
+
+
+
+                        </Box>
+
+
+                    ))
+
+                    }
+
+
+                </Stack>
+
+
+
+
+
+
+
+
+                <Divider/>
+
+
+
+
+
+
+                <Box>
+
+
+                    <Typography fontSize={11}>
 
                         ✅ Güçlü Yönler
 
                     </Typography>
 
+
                     <Stack
 
                         direction="row"
 
-                        spacing={1}
+                        spacing={0.5}
 
-                        flexWrap="wrap"
+                        sx={{
+
+                            overflow:"hidden"
+
+                        }}
 
                     >
+
 
                         {
 
-                            strengths.length === 0
+                        strengths.length
 
-                                ?
+                        ?
 
-                                <Chip
+                        strengths.slice(0,2).map((x,i)=>(
 
-                                    size="small"
+                            <Chip
 
-                                    label="-"
+                                key={i}
 
-                                />
+                                size="small"
 
-                                :
+                                color="success"
 
-                                strengths.map((item) => (
+                                label={x}
 
-                                    <Chip
+                            />
 
-                                        key={item}
+                        ))
 
-                                        size="small"
+                        :
 
-                                        color="success"
+                        <Chip
 
-                                        label={item}
+                            size="small"
 
-                                    />
+                            label="-"
 
-                                ))
+                        />
+
 
                         }
 
+
                     </Stack>
+
 
                 </Box>
 
-                <Box width="100%">
 
-                    <Typography
 
-                        variant="subtitle2"
 
-                        gutterBottom
 
-                    >
+
+
+                <Box>
+
+
+                    <Typography fontSize={11}>
 
                         ⚠ Riskler
 
                     </Typography>
 
+
                     <Stack
 
                         direction="row"
 
-                        spacing={1}
-
-                        flexWrap="wrap"
+                        spacing={0.5}
 
                     >
 
                         {
 
-                            weaknesses.length === 0
+                        weaknesses.length
 
-                                ?
+                        ?
 
-                                <Chip
+                        weaknesses.slice(0,2).map((x,i)=>(
 
-                                    size="small"
+                            <Chip
 
-                                    label="-"
+                                key={i}
 
-                                />
+                                size="small"
 
-                                :
+                                color="warning"
 
-                                weaknesses.map((item) => (
+                                label={x}
 
-                                    <Chip
+                            />
 
-                                        key={item}
+                        ))
 
-                                        size="small"
+                        :
 
-                                        color="warning"
+                        <Chip
 
-                                        label={item}
+                            size="small"
 
-                                    />
+                            label="-"
 
-                                ))
+                        />
+
 
                         }
 
+
                     </Stack>
+
 
                 </Box>
 
-                <Divider flexItem />
 
-                <Box width="100%">
+
+
+
+
+
+                <Divider/>
+
+
+
+
+
+
+                <Box
+
+                    sx={{
+
+                        flex:1,
+
+                        overflow:"hidden"
+
+                    }}
+
+                >
+
+
 
                     <Typography
 
-                        variant="subtitle2"
+                        fontSize={11}
 
-                        gutterBottom
+                        fontWeight={700}
 
                     >
 
@@ -407,50 +718,95 @@ export default function AIScoreCard({
 
                     </Typography>
 
-                    <List dense>
 
-                        {
 
-                            explanations.length === 0
 
-                                ?
 
-                                <ListItem>
 
-                                    <ListItemText
+                    <List
 
-                                        primary="-"
+                        dense
 
-                                    />
+                        sx={{
 
-                                </ListItem>
+                            maxHeight:55,
 
-                                :
+                            overflow:"auto",
 
-                                explanations.map((item, index) => (
+                            p:0
 
-                                    <ListItem key={index}>
+                        }}
 
-                                        <ListItemText
+                    >
 
-                                            primary={item}
 
-                                        />
 
-                                    </ListItem>
+                    {
 
-                                ))
+                    explanations.length
 
-                        }
+                    ?
+
+                    explanations.map((x,i)=>(
+
+
+                        <ListItem
+
+                            key={i}
+
+                            sx={{py:0}}
+
+                        >
+
+                            <ListItemText
+
+                                primary={x}
+
+                                primaryTypographyProps={{
+
+                                    fontSize:11
+
+                                }}
+
+                            />
+
+                        </ListItem>
+
+
+                    ))
+
+                    :
+
+                    <ListItem sx={{py:0}}>
+
+                        <ListItemText primary="-"/>
+
+                    </ListItem>
+
+
+                    }
+
+
 
                     </List>
 
+
+
                 </Box>
+
+
+
+
+
 
             </Stack>
 
+
+
         </Paper>
 
+
     );
+
 
 }

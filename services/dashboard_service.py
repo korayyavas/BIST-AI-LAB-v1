@@ -1,13 +1,15 @@
 """
 BIST AI LAB
-Intelligence Dashboard Service v2.1
+Intelligence Dashboard Service v2.2
 """
 
-from services.prediction_service import PredictionService
+from datetime import datetime
 import logging
 
-from datetime import datetime
+
+from services.prediction_service import PredictionService
 from services.prediction_adapter import prediction_adapter
+
 from services.technical_service import technical_service
 
 from services.news_service import (
@@ -30,6 +32,8 @@ from services.consensus_service import (
 logger = logging.getLogger(__name__)
 
 
+
+
 class DashboardService:
 
 
@@ -40,14 +44,11 @@ class DashboardService:
 
 
     # ========================================================
-    # SCORE NORMALIZER
+    # SCORE EXTRACTORS
     # ========================================================
 
 
-    def extract_news_score(
-        self,
-        data
-    ):
+    def extract_news_score(self, data):
 
         return data.get(
             "statistics",
@@ -59,10 +60,7 @@ class DashboardService:
 
 
 
-    def extract_kap_score(
-        self,
-        data
-    ):
+    def extract_kap_score(self, data):
 
         return data.get(
             "statistics",
@@ -74,10 +72,7 @@ class DashboardService:
 
 
 
-    def extract_research_score(
-        self,
-        data
-    ):
+    def extract_research_score(self, data):
 
         return data.get(
             "consensus",
@@ -90,7 +85,7 @@ class DashboardService:
 
 
     # ========================================================
-    # MAIN DASHBOARD
+    # BUILD DASHBOARD
     # ========================================================
 
 
@@ -103,18 +98,16 @@ class DashboardService:
         symbol = symbol.upper()
 
 
+
         logger.info(
-
             "Building dashboard for %s",
-
             symbol
-
         )
 
 
 
         # ----------------------------------------------------
-        # DATA SOURCES
+        # DATA
         # ----------------------------------------------------
 
 
@@ -140,7 +133,7 @@ class DashboardService:
 
 
         # ----------------------------------------------------
-        # COMPONENT SCORES
+        # ML
         # ----------------------------------------------------
 
 
@@ -149,50 +142,89 @@ class DashboardService:
         )
 
 
-        ml_score = 50
+
+        ml_score = prediction.get(
+            "top_score",
+            50
+        )
 
 
-        try:
 
-            prediction = self.prediction_service.predict(
-                features=None,
-                current_price=None
-            )
-
-
-            ml_score = prediction.get(
-                "top_score",
-                50
-            )
+        confidence = prediction.get(
+            "confidence",
+            50
+        )
 
 
-        except Exception as e:
 
-            logger.warning(
-                "Prediction unavailable: %s",
-                e
-            )
+        decision = prediction.get(
+            "signal",
+            "HOLD"
+        )
+
+
+
+        # ----------------------------------------------------
+        # COMPONENT SCORES
+        # ----------------------------------------------------
 
 
         components = {
 
-            "news":
-            self.extract_news_score(news),
-
-            "kap":
-            self.extract_kap_score(kap),
-
-            "research":
-            self.extract_research_score(research),
-
-            "technical":
-            65,
 
             "ml":
-            ml_score,
+
+            float(
+                ml_score
+                or 50
+            ),
+
+
+
+            "technical":
+
+            65,
+
+
+
+            "news":
+
+            float(
+                self.extract_news_score(
+                    news
+                )
+                or 50
+            ),
+
+
+
+            "research":
+
+            float(
+                self.extract_research_score(
+                    research
+                )
+                or 50
+            ),
+
+
+
+            "kap":
+
+            float(
+                self.extract_kap_score(
+                    kap
+                )
+                or 50
+            ),
 
         }
 
+
+
+        # ----------------------------------------------------
+        # CONSENSUS
+        # ----------------------------------------------------
 
 
         consensus = calculate_consensus(
@@ -205,8 +237,123 @@ class DashboardService:
 
 
 
+        ai_score = consensus.get(
+
+            "score",
+
+            sum(
+                components.values()
+            )
+            /
+            len(
+                components
+            )
+
+        )
+
+
+
+        confidence = float(
+
+            confidence
+
+            or
+
+            consensus.get(
+                "confidence",
+                50
+            )
+
+        )
+
+
+
         # ----------------------------------------------------
-        # FINAL RESPONSE
+        # INTELLIGENCE OBJECT
+        # ----------------------------------------------------
+
+
+        intelligence = {
+
+
+            "ai_score":
+
+            round(
+                ai_score,
+                2
+            ),
+
+
+
+            "decision":
+
+            decision,
+
+
+
+            "confidence":
+
+            round(
+                confidence,
+                2
+            ),
+
+
+
+            "ml_score":
+
+            components["ml"],
+
+
+
+            "technical_score":
+
+            components["technical"],
+
+
+
+            "news_score":
+
+            components["news"],
+
+
+
+            "research_score":
+
+            components["research"],
+
+
+
+            "kap_score":
+
+            components["kap"],
+
+
+
+            "strengths":
+
+            [],
+
+
+
+            "weaknesses":
+
+            [],
+
+
+
+            "explanations":
+
+            [],
+
+
+        }
+
+
+
+
+        # ----------------------------------------------------
+        # RESPONSE
         # ----------------------------------------------------
 
 
@@ -218,11 +365,13 @@ class DashboardService:
             symbol,
 
 
+
             "price":
 
             technical.get(
                 "price"
             ),
+
 
 
             "trend":
@@ -252,12 +401,6 @@ class DashboardService:
 
 
 
-            "consensus":
-
-            consensus,
-
-
-
             "technical":
 
             technical,
@@ -266,21 +409,71 @@ class DashboardService:
 
             "prediction":
 
+            prediction,
+
+
+
+            "consensus":
+
+            consensus,
+
+
+
+            "intelligence":
+
+            intelligence,
+
+
+
+            "version":
+
             {
 
-                "status":
+                "version":
 
-                "waiting"
+                "v10.0"
 
             },
 
 
 
-            "generated_at":
+            "modules":
+
+            {
+
+                "ml":
+
+                True,
+
+                "news":
+
+                True,
+
+                "kap":
+
+                True,
+
+                "research":
+
+                True,
+
+                "technical":
+
+                True
+
+            },
+
+
+
+            "loadedAt":
 
             datetime.utcnow().isoformat(),
 
+
+
         }
+
+
 
 
 
@@ -293,16 +486,8 @@ dashboard_service = DashboardService()
 
 
 
-# ============================================================
-# PUBLIC API
-# ============================================================
 
-
-def get_dashboard(
-
-    symbol: str,
-
-):
+def get_dashboard(symbol: str):
 
 
     return dashboard_service.build(
@@ -310,6 +495,7 @@ def get_dashboard(
         symbol
 
     )
+
 
 
 
@@ -324,11 +510,13 @@ def dashboard_health():
         "Dashboard Intelligence",
 
 
+
         "status":
 
-        "ok",
+        "ok"
 
     }
+
 
 
 

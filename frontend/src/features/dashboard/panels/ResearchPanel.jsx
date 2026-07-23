@@ -1,11 +1,16 @@
 import {
-    Paper,
-    Typography,
+
+    Box,
+
     Stack,
+
+    Typography,
+
     Chip,
-    CircularProgress,
-    Divider,
+
 } from "@mui/material";
+
+
 
 export default function ResearchPanel({
 
@@ -15,113 +20,166 @@ export default function ResearchPanel({
 
 }) {
 
-    if (loading) {
+
+    if(loading){
 
         return (
 
-            <Paper
-                sx={{
-                    p: 2,
-                    height: 340,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
+            <Typography>
 
-                <CircularProgress />
+                Araştırma yükleniyor...
 
-            </Paper>
+            </Typography>
 
         );
 
     }
 
+
+
     return (
 
-        <Paper
-            sx={{
-                p: 2,
-                height: 340,
-                overflow: "auto",
-            }}
-        >
+        <>
 
             <Typography
-                variant="h6"
+
+                variant="h5"
+
                 mb={2}
+
+                fontWeight={700}
+
             >
-                Research
+
+                📄 Research Intelligence
+
             </Typography>
 
-            {
 
-                reports.length === 0 && (
 
-                    <Typography color="text.secondary">
+            <Stack spacing={2}>
+
+
+                {
+
+                    reports.length===0 &&
+
+                    <Typography color="gray">
 
                         Araştırma raporu bulunamadı.
 
                     </Typography>
 
-                )
+                }
 
-            }
 
-            <Stack spacing={2}>
 
                 {
 
-                    reports.map((item, index) => (
+                    reports.map((r,index)=>(
 
-                        <Paper
+
+                        <Box
+
                             key={index}
-                            variant="outlined"
-                            sx={{ p: 2 }}
+
+                            sx={{
+
+                                p:2,
+
+                                borderRadius:3,
+
+                                bgcolor:"#161b22",
+
+                                border:"1px solid #26313d"
+
+                            }}
+
                         >
 
-                            <Typography
-                                fontWeight={700}
+
+                            <Stack
+
+                                direction="row"
+
+                                justifyContent="space-between"
+
                             >
-                                {item.broker}
-                            </Typography>
 
-                            <Divider sx={{ my: 1 }} />
 
-                            <Chip
-                                label={item.recommendation ?? "HOLD"}
-                                color={
-                                    item.recommendation === "BUY"
-                                        ? "success"
-                                        : item.recommendation === "SELL"
-                                        ? "error"
-                                        : "warning"
-                                }
-                            />
+                                <Typography
+
+                                    fontWeight={700}
+
+                                >
+
+                                    {r.broker || "Research"}
+
+                                </Typography>
+
+
+                                <Chip
+
+                                    label={
+
+                                        r.recommendation ||
+
+                                        "NEUTRAL"
+
+                                    }
+
+                                />
+
+
+                            </Stack>
+
+
 
                             <Typography mt={2}>
-                                Target :
-                                {" "}
-                                ₺
-                                {item.target_price ?? "-"}
+
+                                {r.title}
+
                             </Typography>
+
+
 
                             <Typography
-                                variant="body2"
+
                                 mt={1}
+
+                                color="#9ca3af"
+
                             >
-                                {item.summary}
+
+                                {r.summary}
+
                             </Typography>
 
-                        </Paper>
+
+
+                            <Typography mt={1}>
+
+                                Target:
+
+                                {" "}
+
+                                ₺{r.target_price || "-"}
+
+                            </Typography>
+
+
+                        </Box>
+
 
                     ))
 
                 }
 
+
             </Stack>
 
-        </Paper>
+
+        </>
 
     );
 

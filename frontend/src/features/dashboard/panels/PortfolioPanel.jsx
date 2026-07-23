@@ -8,31 +8,50 @@ import {
     LinearProgress,
 } from "@mui/material";
 
+
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import RemoveIcon from "@mui/icons-material/Remove";
+
 
 import { useEffect, useState } from "react";
 
 import axios from "../../../api/api";
 
-export default function PortfolioPanel() {
 
-    const [items, setItems] = useState([]);
 
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+export default function PortfolioPanel(){
+
+
+
+    const [items,setItems] = useState([]);
+
+    const [loading,setLoading] = useState(true);
+
+
+
+
+
+    useEffect(()=>{
 
         load();
 
-    }, []);
+    },[]);
 
-    async function load() {
+
+
+
+
+
+    async function load(){
+
 
         setLoading(true);
 
-        try {
+
+        try{
+
 
             const res = await axios.post(
 
@@ -40,89 +59,172 @@ export default function PortfolioPanel() {
 
                 {
 
-                    top: 10,
+                    top:10,
 
-                    signal: "ALL",
+                    signal:"ALL",
 
-                    min_confidence: 0,
+                    min_confidence:0,
 
                 }
 
             );
 
+
+
             setItems(
 
-                res.data.top_picks ?? []
+                res.data.top_picks ??
+
+                res.data.items ??
+
+                []
 
             );
 
+
         }
 
-        catch (e) {
+        catch(e){
 
-            console.error(e);
+
+            console.error(
+
+                "Portfolio load error",
+
+                e
+
+            );
+
 
             setItems([]);
 
+
         }
 
-        finally {
+        finally{
+
 
             setLoading(false);
 
+
         }
+
 
     }
 
-    if (loading) {
+
+
+
+
+
+
+    function safeNumber(
+
+        value,
+
+        fallback=0
+
+    ){
+
+
+        const n = Number(value);
+
+
+        return Number.isFinite(n)
+
+            ?
+
+            n
+
+            :
+
+            fallback;
+
+
+    }
+
+
+
+
+
+
+
+
+    if(loading){
+
 
         return (
+
 
             <Paper
 
                 sx={{
 
-                    height: 420,
+                    height:360,
 
-                    display: "flex",
+                    display:"flex",
 
-                    justifyContent: "center",
+                    justifyContent:"center",
 
-                    alignItems: "center",
+                    alignItems:"center",
+
+                    bgcolor:"#10151d",
+
+                    borderRadius:4,
 
                 }}
 
             >
 
-                <CircularProgress />
+                <CircularProgress/>
+
 
             </Paper>
 
+
         );
+
 
     }
 
+
+
+
+
+
+
     return (
+
+
 
         <Paper
 
+
             sx={{
 
-                p: 2,
 
-                height: 420,
+                p:1.5,
 
-                overflow: "auto",
+                height:360,
 
-                bgcolor: "#10151d",
+                bgcolor:"#10151d",
 
-                border: "1px solid #243041",
+                border:"1px solid #243041",
 
-                borderRadius: 4,
+                borderRadius:4,
+
+                overflow:"hidden",
+
 
             }}
 
+
+
         >
+
+
+
+
 
             <Typography
 
@@ -130,195 +232,370 @@ export default function PortfolioPanel() {
 
                 fontWeight={700}
 
-                mb={2}
+                mb={1}
+
 
             >
 
+
                 📈 AI WATCHLIST
+
 
             </Typography>
 
-            {
 
-                items.length === 0 && (
 
-                    <Typography>
 
-                        Veri bulunamadı.
 
-                    </Typography>
 
-                )
 
-            }
+            <Box
 
-            <Stack spacing={2}>
+                sx={{
+
+                    height:"calc(100% - 40px)",
+
+                    overflow:"auto",
+
+                    pr:0.5,
+
+                }}
+
+            >
+
+
+
 
                 {
 
-                    items.map((item) => {
+                items.length===0 &&
 
-                        let color = "warning";
 
-                        let icon = <RemoveIcon />;
+                <Typography>
 
-                        if ((item.signal ?? "").includes("BUY")) {
+                    Veri bulunamadı.
 
-                            color = "success";
+                </Typography>
 
-                            icon = <TrendingUpIcon />;
-
-                        }
-
-                        if ((item.signal ?? "").includes("SELL")) {
-
-                            color = "error";
-
-                            icon = <TrendingDownIcon />;
-
-                        }
-
-                        return (
-
-                            <Paper
-
-                                key={item.symbol}
-
-                                variant="outlined"
-
-                                sx={{
-
-                                    p: 2,
-
-                                    bgcolor: "#161d28",
-
-                                    borderRadius: 2,
-
-                                }}
-
-                            >
-
-                                <Box
-
-                                    display="flex"
-
-                                    justifyContent="space-between"
-
-                                    alignItems="center"
-
-                                >
-
-                                    <Box>
-
-                                        <Typography
-
-                                            fontWeight={700}
-
-                                        >
-
-                                            {item.symbol}
-
-                                        </Typography>
-
-                                        <Typography
-
-                                            variant="caption"
-
-                                        >
-
-                                            {item.current_price} ₺
-
-                                        </Typography>
-
-                                    </Box>
-
-                                    <Chip
-
-                                        icon={icon}
-
-                                        color={color}
-
-                                        label={item.signal}
-
-                                    />
-
-                                </Box>
-
-                                <Box mt={2}>
-
-                                    <Typography
-
-                                        variant="caption"
-
-                                    >
-
-                                        Confidence {Number(item.confidence).toFixed(1)}%
-
-                                    </Typography>
-
-                                    <LinearProgress
-
-                                        variant="determinate"
-
-                                        value={item.confidence}
-
-                                        sx={{
-
-                                            mt: 0.5,
-
-                                            height: 8,
-
-                                            borderRadius: 10,
-
-                                        }}
-
-                                    />
-
-                                </Box>
-
-                                <Stack
-
-                                    direction="row"
-
-                                    spacing={1}
-
-                                    mt={2}
-
-                                    flexWrap="wrap"
-
-                                >
-
-                                    <Chip
-
-                                        size="small"
-
-                                        label={`Risk ${item.risk_score}`}
-
-                                    />
-
-                                    <Chip
-
-                                        size="small"
-
-                                        color="primary"
-
-                                        label={`Top ${item.top_score}`}
-
-                                    />
-
-                                </Stack>
-
-                            </Paper>
-
-                        );
-
-                    })
 
                 }
 
-            </Stack>
+
+
+
+
+
+                <Stack spacing={1}>
+
+
+                {
+
+
+                items.map((item,index)=>{
+
+
+
+                    const signal =
+
+                        item.signal ??
+
+                        "HOLD";
+
+
+
+
+                    const confidence =
+
+                        safeNumber(
+
+                            item.confidence ??
+
+                            item.confidence_score
+
+                        );
+
+
+
+
+                    const risk =
+
+                        safeNumber(
+
+                            item.risk_score
+
+                        );
+
+
+
+
+                    const score =
+
+                        safeNumber(
+
+                            item.top_score ??
+
+                            item.score
+
+                        );
+
+
+
+
+
+                    let color="warning";
+
+                    let icon=<RemoveIcon/>;
+
+
+
+
+
+                    if(signal.includes("BUY")){
+
+
+                        color="success";
+
+                        icon=<TrendingUpIcon/>;
+
+
+                    }
+
+
+
+
+
+                    if(signal.includes("SELL")){
+
+
+                        color="error";
+
+                        icon=<TrendingDownIcon/>;
+
+
+                    }
+
+
+
+
+
+
+
+                    return (
+
+
+
+                        <Paper
+
+
+                            key={item.symbol ?? index}
+
+
+                            variant="outlined"
+
+
+                            sx={{
+
+
+                                p:1,
+
+                                bgcolor:"#161d28",
+
+                                borderRadius:2,
+
+
+                            }}
+
+
+
+                        >
+
+
+
+
+
+                            <Box
+
+                                display="flex"
+
+                                justifyContent="space-between"
+
+                                alignItems="center"
+
+                            >
+
+
+
+                                <Typography
+
+                                    fontWeight={700}
+
+                                    fontSize={14}
+
+                                >
+
+                                    {item.symbol}
+
+
+                                </Typography>
+
+
+
+
+                                <Chip
+
+
+                                    icon={icon}
+
+                                    color={color}
+
+                                    label={signal}
+
+                                    size="small"
+
+
+                                />
+
+
+
+                            </Box>
+
+
+
+
+
+
+
+                            <Typography
+
+                                variant="caption"
+
+                            >
+
+
+                                Confidence {confidence.toFixed(1)}%
+
+
+                            </Typography>
+
+
+
+
+
+                            <LinearProgress
+
+
+                                variant="determinate"
+
+
+                                value={Math.min(
+
+                                    confidence,
+
+                                    100
+
+                                )}
+
+
+                                sx={{
+
+
+                                    mt:.3,
+
+                                    height:5,
+
+                                    borderRadius:5,
+
+
+                                }}
+
+
+
+                            />
+
+
+
+
+
+
+
+                            <Stack
+
+
+                                direction="row"
+
+                                spacing={.5}
+
+                                mt={.8}
+
+
+                            >
+
+
+
+                                <Chip
+
+                                    size="small"
+
+                                    label={
+
+                                        `Risk ${risk.toFixed(0)}`
+
+                                    }
+
+                                />
+
+
+
+
+                                <Chip
+
+                                    size="small"
+
+                                    color="primary"
+
+                                    label={
+
+                                        `AI ${score.toFixed(1)}`
+
+                                    }
+
+                                />
+
+
+                            </Stack>
+
+
+
+
+
+                        </Paper>
+
+
+                    );
+
+
+                })
+
+
+                }
+
+
+
+                </Stack>
+
+
+
+
+
+            </Box>
+
+
+
+
 
         </Paper>
+
+
 
     );
 

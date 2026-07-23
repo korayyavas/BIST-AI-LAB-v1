@@ -1,13 +1,13 @@
-from __future__ import annotations
-"""
-services/consensus_service.py
+# -*- coding: utf-8 -*-
 
+"""
 BIST AI LAB
-Consensus Decision Engine v2.0
+Consensus Decision Engine v3.3
 
+Multi Intelligence Decision Layer
 """
 
-
+from __future__ import annotations
 
 import logging
 
@@ -15,11 +15,10 @@ from dataclasses import dataclass, asdict
 
 from datetime import datetime
 
-from typing import Dict
+from typing import Dict, List
 
 
 logger = logging.getLogger(__name__)
-
 
 
 # ============================================================
@@ -40,6 +39,12 @@ class ConsensusResult:
 
     components: Dict[str, float]
 
+    strengths: List[str]
+
+    risks: List[str]
+
+    explanations: List[str]
+
     explanation: str
 
     timestamp: str
@@ -47,7 +52,7 @@ class ConsensusResult:
 
 
 # ============================================================
-# CONSENSUS ENGINE
+# SERVICE
 # ============================================================
 
 
@@ -56,27 +61,23 @@ class ConsensusService:
 
     WEIGHTS = {
 
+        "ml": 0.35,
 
-        "news": 0.25,
+        "technical": 0.25,
 
         "kap": 0.20,
 
-        "research": 0.20,
+        "news": 0.15,
 
-        "technical": 0.20,
-
-        "ml": 0.15,
+        "research": 0.05,
 
     }
 
 
 
     def calculate_score(
-
         self,
-
         components: Dict[str, float],
-
     ) -> float:
 
 
@@ -85,36 +86,24 @@ class ConsensusService:
 
         for key, weight in self.WEIGHTS.items():
 
-
             value = components.get(
-
                 key,
-
                 50
-
             )
-
 
             score += value * weight
 
 
-
         return round(
-
             score,
-
             2
-
         )
 
 
 
     def decision(
-
         self,
-
         score: float,
-
     ) -> str:
 
 
@@ -133,20 +122,22 @@ class ConsensusService:
 
 
     def confidence(
-
         self,
-
         score: float,
-
     ) -> str:
 
 
-        if score >= 80 or score <= 20:
+        distance = abs(
+            score - 50
+        )
+
+
+        if distance >= 25:
 
             return "HIGH"
 
 
-        if score >= 65 or score <= 35:
+        if distance >= 12:
 
             return "MEDIUM"
 
@@ -155,111 +146,211 @@ class ConsensusService:
 
 
 
-    def explain(
+    # ========================================================
+    # COMPONENT ANALYSIS
+    # ========================================================
 
+
+    def analyze_components(
         self,
-
         components: Dict[str, float],
-
-        decision: str,
-
-    ) -> str:
+    ):
 
 
-        parts = []
+        strengths = []
+
+        risks = []
+
+        explanations = []
+
+
+
+        names = {
+
+
+            "ml":
+
+            "\u004d\u0061\u006b\u0069\u006e\u0065 \u00f6\u011f\u0072\u0065\u006e\u006d\u0065\u0073\u0069",
+
+
+
+            "technical":
+
+            "\u0054\u0065\u006b\u006e\u0069\u006b \u0061\u006e\u0061\u006c\u0069\u007a",
+
+
+
+            "news":
+
+            "\u0048\u0061\u0062\u0065\u0072 \u0061\u006e\u0061\u006c\u0069\u007a\u0069",
+
+
+
+            "kap":
+
+            "\u004b\u0041\u0050 \u0076\u0065\u0072\u0069\u006c\u0065\u0072\u0069",
+
+
+
+            "research":
+
+            "\u0041\u0072\u0061\u015f\u0074\u0131\u0072\u006d\u0061 \u0072\u0061\u0070\u006f\u0072\u006c\u0061\u0072\u0131",
+
+        }
+
+
 
 
         for key, value in components.items():
 
 
+            name = names.get(
+                key,
+                key
+            )
+
+
             if value >= 70:
 
-                status = "güçlü"
+
+                strengths.append(
+
+                    f"{name} g\u00fc\u00e7l\u00fc"
+
+                )
+
+
+                explanations.append(
+
+                    f"{name} olumlu katk\u0131 sa\u011fl\u0131yor."
+
+                )
+
+
 
             elif value <= 40:
 
-                status = "zayıf"
+
+                risks.append(
+
+                    f"{name} zay\u0131f"
+
+                )
+
+
+                explanations.append(
+
+                    f"{name} a\u015fa\u011f\u0131 y\u00f6nl\u00fc risk olu\u015fturuyor."
+
+                )
+
+
 
             else:
 
-                status = "nötr"
 
+                explanations.append(
 
-            parts.append(
+                    f"{name} dengeli seviyede."
 
-                f"{key}: {status}"
-
-            )
+                )
 
 
 
         return (
 
-            " | ".join(parts)
+            strengths,
 
-            +
+            risks,
 
-            f" | Genel karar: {decision}"
+            explanations
 
         )
 
 
 
+    # ========================================================
+    # ANALYZE
+    # ========================================================
+
+
     def analyze(
-
         self,
-
         symbol: str,
-
-        components: Dict[str, float],
-
+        components: Dict[str,float],
     ):
 
 
         score = self.calculate_score(
-
             components
-
         )
 
 
         decision = self.decision(
-
             score
-
         )
 
 
         confidence = self.confidence(
-
             score
+        )
+
+
+
+        strengths, risks, explanations = self.analyze_components(
+            components
+        )
+
+
+
+        explanations.append(
+
+            f"Genel karar: {decision}"
 
         )
+
 
 
         return ConsensusResult(
 
+
             symbol=symbol,
+
 
             score=score,
 
+
             decision=decision,
+
 
             confidence=confidence,
 
+
             components=components,
 
-            explanation=self.explain(
 
-                components,
+            strengths=strengths,
 
-                decision
+
+            risks=risks,
+
+
+            explanations=explanations,
+
+
+            explanation=" | ".join(
+
+                explanations
 
             ),
 
+
             timestamp=datetime.utcnow().isoformat(),
 
+
         )
+
+
 
 
 
@@ -272,6 +363,8 @@ consensus_service = ConsensusService()
 
 
 
+
+
 # ============================================================
 # PUBLIC API
 # ============================================================
@@ -281,7 +374,7 @@ def calculate_consensus(
 
     symbol: str,
 
-    components: Dict[str, float],
+    components: Dict[str,float],
 
 ):
 
@@ -303,6 +396,8 @@ def calculate_consensus(
 
 
 
+
+
 def consensus_health():
 
 
@@ -311,14 +406,21 @@ def consensus_health():
 
         "service":
 
-        "Consensus Engine",
+        "Consensus Decision Engine",
+
+
+        "version":
+
+        "3.3",
 
 
         "status":
 
-        "ok",
+        "ok"
 
     }
+
+
 
 
 

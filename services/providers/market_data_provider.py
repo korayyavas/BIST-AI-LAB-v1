@@ -2,12 +2,15 @@ from __future__ import annotations
 
 """
 BIST AI LAB
-Market Data Provider v2.0
+Market Data Provider v3.0
+Real Market Data Engine
 """
 
 
 import logging
+
 import pandas as pd
+import yfinance as yf
 
 
 logger = logging.getLogger(__name__)
@@ -18,14 +21,24 @@ class MarketDataProvider:
 
     def __init__(self):
 
-        self.source = "Market"
+        self.source = "Yahoo Finance"
 
-    def get(self, symbol: str):
+
+
+    def get(
+        self,
+        symbol: str
+    ):
 
         return self.fetch(symbol)
 
 
-    def fetch(self, symbol: str):
+
+    def fetch(
+        self,
+        symbol: str
+    ):
+
 
         symbol = symbol.upper()
 
@@ -36,74 +49,146 @@ class MarketDataProvider:
         )
 
 
-        return self._demo_dataframe(symbol)
+        try:
+
+            ticker = f"{symbol}.IS"
+
+
+            df = yf.download(
+
+                ticker,
+
+                period="5y",
+
+                interval="1d",
+
+                auto_adjust=False,
+
+                progress=False
+
+            )
+
+
+            if df is None or df.empty:
+
+                raise ValueError(
+                    "Yahoo Finance data empty"
+                )
 
 
 
-    def _demo_dataframe(self, symbol):
+            # MultiIndex temizleme
+
+            if isinstance(
+                df.columns,
+                pd.MultiIndex
+            ):
+
+                df.columns = [
+
+                    c[0]
+
+                    for c in df.columns
+
+                ]
 
 
-        if symbol != "ASELS":
 
-            return pd.DataFrame()
-
+            df = df.reset_index()
 
 
-        data = [
 
-            {
-                "Date":"2026-07-22",
-                "Open":243.0,
-                "High":247.0,
-                "Low":242.5,
-                "Close":245.5,
-                "Volume":12500000
-            },
+            rename_map = {
 
-            {
-                "Date":"2026-07-21",
-                "Open":240.0,
-                "High":244.0,
-                "Low":239.5,
-                "Close":242.8,
-                "Volume":11800000
-            },
+                "Adj Close":
+                "Adj_Close"
 
-            {
-                "Date":"2026-07-20",
-                "Open":237.0,
-                "High":241.0,
-                "Low":236.5,
-                "Close":239.4,
-                "Volume":10200000
             }
 
-        ]
+
+            df.rename(
+
+                columns=rename_map,
+
+                inplace=True
+
+            )
 
 
-        df = pd.DataFrame(data)
+
+            required = [
+
+                "Date",
+
+                "Open",
+
+                "High",
+
+                "Low",
+
+                "Close",
+
+                "Volume"
+
+            ]
 
 
-        df["Date"] = pd.to_datetime(
-            df["Date"]
-        )
+            df = df[required]
 
 
-        df = df.sort_values(
-            "Date"
-        )
+
+            df = df.dropna()
 
 
-        return df.reset_index(
-            drop=True
-        )
+
+            df = df.sort_values(
+
+                "Date"
+
+            )
+
+
+            logger.info(
+
+                "Market rows loaded: %s",
+
+                len(df)
+
+            )
+
+
+            return df.reset_index(
+                drop=True
+            )
+
+
+
+        except Exception as e:
+
+
+            logger.error(
+
+                "Market data failed %s: %s",
+
+                symbol,
+
+                e
+
+            )
+
+
+            return pd.DataFrame()
 
 
 
 market_data_provider = MarketDataProvider()
 
 
+
 __all__ = [
+
     "MarketDataProvider",
+
     "market_data_provider",
+
 ]

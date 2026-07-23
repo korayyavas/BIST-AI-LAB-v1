@@ -1,114 +1,34 @@
-import axios from "axios";
+import { apiGet } from "./apiClient";
 
-const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 30000,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
+export async function getIntelligence(
+    symbol = "ASELS"
+) {
 
-apiClient.interceptors.request.use(
-    (config) => {
+    try {
 
-        console.log(
-            `[API] ${config.method?.toUpperCase()} ${config.url}`
+        const result = await apiGet(
+            `/dashboard/${symbol}`
         );
 
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+        return result;
 
-apiClient.interceptors.response.use(
-    (response) => response,
+    } catch (error) {
 
-    (error) => {
+        console.error(
+            "Dashboard Intelligence API Error",
+            error
+        );
 
-        if (error.response) {
-
-            console.error(
-                "[API ERROR]",
-                error.response.status,
-                error.response.data
-            );
-
-        } else if (error.request) {
-
-            console.error(
-                "[NETWORK ERROR]",
-                error.message
-            );
-
-        } else {
-
-            console.error(
-                "[REQUEST ERROR]",
-                error.message
-            );
-
-        }
-
-        return Promise.reject(error);
+        return null;
 
     }
-);
-
-export async function apiGet(url, config = {}) {
-
-    const response = await apiClient.get(url, config);
-
-    return response.data;
 
 }
 
-export async function apiPost(
-    url,
-    data = {},
-    config = {}
-) {
 
-    const response = await apiClient.post(
-        url,
-        data,
-        config
-    );
+export default {
 
-    return response.data;
+    getIntelligence,
 
-}
-
-export async function apiPut(
-    url,
-    data = {},
-    config = {}
-) {
-
-    const response = await apiClient.put(
-        url,
-        data,
-        config
-    );
-
-    return response.data;
-
-}
-
-export async function apiDelete(
-    url,
-    config = {}
-) {
-
-    const response = await apiClient.delete(
-        url,
-        config
-    );
-
-    return response.data;
-
-}
-
-export default apiClient;
+};

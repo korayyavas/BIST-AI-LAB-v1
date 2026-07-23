@@ -1,325 +1,228 @@
 import axios from "../../api/api";
 
-// =====================================================
-// HTTP
-// =====================================================
 
-async function get(url) {
 
-    const { data } = await axios.get(url);
+async function get(url){
+
+    const {data} = await axios.get(url);
 
     return data;
 
 }
 
-async function post(url, body) {
 
-    const { data } = await axios.post(
 
-        url,
 
-        body,
-
-    );
-
-    return data;
-
-}
-
-// =====================================================
-// Dashboard Loader
-// =====================================================
 
 export async function loadDashboard(
 
-    symbol = "ASELS",
+    symbol="ASELS"
 
-) {
+){
 
-    const requests = await Promise.allSettled([
 
-        get(
+    try{
 
-            `/intelligence/${symbol}`,
 
-        ),
+        const dashboard = await get(
 
-        post(
+            `/dashboard/${symbol}`
 
-            "/news",
+        );
 
-            {
 
-                symbol,
 
-            },
+        return {
 
-        ),
 
-        post(
+            ...dashboard,
 
-            "/research",
 
-            {
 
-                symbol,
-
-            },
-
-        ),
-
-        post(
-
-            "/kap",
-
-            {
-
-                symbol,
-
-            },
-
-        ),
-
-        post(
-
-            "/top-picks",
-
-            {
-
-                top: 10,
-
-                signal: "ALL",
-
-                min_confidence: 0,
-
-            },
-
-        ),
-
-        get(
-
-            "/version",
-
-        ),
-
-        get(
-
-            "/modules",
-
-        ),
-
-    ]);
-
-    const [
-
-        intelligence,
-
-        news,
-
-        research,
-
-        kap,
-
-        topPicks,
-
-        version,
-
-        modules,
-
-    ] = requests;
-
-    return {
-
-        intelligence:
-
-            intelligence.status === "fulfilled"
-
-                ? intelligence.value
-
-                : {},
-
-        news:
-
-            news.status === "fulfilled"
-
-                ? (
-
-                    news.value.news ??
-
-                    []
-
-                )
-
-                : [],
-
-        research:
-
-            research.status === "fulfilled"
-
-                ? (
-
-                    research.value.reports ??
-
-                    []
-
-                )
-
-                : [],
-
-        kap:
-
-            kap.status === "fulfilled"
-
-                ? (
-
-                    kap.value.kap ??
-
-                    []
-
-                )
-
-                : [],
-
-        topPicks:
-
-            topPicks.status === "fulfilled"
-
-                ? (
-
-                    topPicks.value.top_picks ??
-
-                    []
-
-                )
-
-                : [],
-
-        version:
-
-            version.status === "fulfilled"
-
-                ? version.value
-
-                : {},
-
-        modules:
-
-            modules.status === "fulfilled"
-
-                ? modules.value
-
-                : {},
-
-        loadedAt:
-
-            new Date().toISOString(),
-
-        errors: {
+            // AI INTELLIGENCE
 
             intelligence:
 
-                intelligence.status === "rejected",
+                dashboard.intelligence ?? {},
+
+
+
+
+
+            // NEWS KORUNUYOR
 
             news:
 
-                news.status === "rejected",
+                dashboard.news ?? {
+
+                    news: [],
+
+                    statistics:{}
+
+                },
+
+
+
+
+
+            // RESEARCH KORUNUYOR
 
             research:
 
-                research.status === "rejected",
+                dashboard.research ?? {
+
+                    items: [],
+
+                    consensus:{}
+
+                },
+
+
+
+
+
+            // KAP KORUNUYOR
 
             kap:
 
-                kap.status === "rejected",
+                dashboard.kap ?? {
+
+                    items: [],
+
+                    statistics:{}
+
+                },
+
+
+
+
 
             topPicks:
 
-                topPicks.status === "rejected",
+                dashboard.topPicks ?? [],
+
+
+
+
 
             version:
 
-                version.status === "rejected",
+                dashboard.version ?? {
+
+                    version:"v10.0"
+
+                },
+
+
+
+
 
             modules:
 
-                modules.status === "rejected",
+                dashboard.modules ?? {},
 
-        },
 
-    };
+
+
+
+            loadedAt:
+
+                dashboard.loadedAt ??
+
+                new Date().toISOString(),
+
+
+
+
+
+            errors:{}
+
+
+
+        };
+
+
+    }
+
+
+    catch(error){
+
+
+        console.error(
+
+            "Dashboard load error",
+
+            error
+
+        );
+
+
+
+        return {
+
+
+            intelligence:{},
+
+
+            news:{
+
+                news:[]
+
+            },
+
+
+            research:{
+
+                items:[]
+
+            },
+
+
+            kap:{
+
+                items:[]
+
+            },
+
+
+            topPicks:[],
+
+
+            errors:{
+
+                dashboard:true
+
+            }
+
+
+        };
+
+
+    }
+
 
 }
 
-// =====================================================
-// Refresh
-// =====================================================
 
-export async function refreshDashboard(
 
-    symbol,
 
-) {
 
-    return await loadDashboard(
+export async function refreshDashboard(symbol){
 
-        symbol,
 
-    );
+    return loadDashboard(symbol);
+
 
 }
 
-// =====================================================
-// Health
-// =====================================================
 
-export async function getHealth() {
 
-    return await get(
 
-        "/health",
 
-    );
+export async function getHealth(){
 
-}
 
-// =====================================================
-// System
-// =====================================================
+    return get("/health");
 
-export async function getSystemInfo() {
-
-    return await get(
-
-        "/system",
-
-    );
-
-}
-
-// =====================================================
-// API Version
-// =====================================================
-
-export async function getVersion() {
-
-    return await get(
-
-        "/version",
-
-    );
-
-}
-
-// =====================================================
-// Modules
-// =====================================================
-
-export async function getModules() {
-
-    return await get(
-
-        "/modules",
-
-    );
 
 }
