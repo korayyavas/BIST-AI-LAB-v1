@@ -11,24 +11,33 @@ import {
 
 import { useDashboard } from "./dashboard/hooks";
 
+
 import {
     DashboardProvider,
     useDashboardContext,
 } from "./dashboard/DashboardContext";
 
 
+
 import AIScoreCard from "./dashboard/cards/AIScoreCard";
+import AIExplanationCard from "./dashboard/cards/AIExplanationCard";
+import TechnicalCard from "./dashboard/cards/TechnicalCard";
 import KPICard from "./dashboard/cards/KPICard";
+
 
 import TradingChart from "./dashboard/charts/TradingChart";
 import RadarChart from "./dashboard/charts/RadarChart";
+
 
 import PortfolioPanel from "./dashboard/panels/PortfolioPanel";
 import NewsPanel from "./dashboard/panels/NewsPanel";
 import ResearchPanel from "./dashboard/panels/ResearchPanel";
 import KapPanel from "./dashboard/panels/KapPanel";
 
+
 import StatusBar from "./dashboard/widgets/StatusBar";
+
+
 
 
 
@@ -37,15 +46,23 @@ import StatusBar from "./dashboard/widgets/StatusBar";
 function DashboardContent(){
 
 
+
     const { selectedSymbol } = useDashboardContext();
 
 
 
+
+
     const {
+
         loading,
+
         error,
+
         data,
+
     } = useDashboard(selectedSymbol);
+
 
 
 
@@ -55,34 +72,57 @@ function DashboardContent(){
     const intelligence = useMemo(()=>{
 
 
+
         const backendIntel =
+
             data?.intelligence ?? {};
 
 
+
         const consensus =
+
             data?.consensus ?? {};
 
 
 
+
+
         let explanations =
+
             backendIntel.explanations ??
+
             consensus.explanations ??
+
             [];
 
 
 
+
+
         if(
+
             explanations.length === 0 &&
+
             typeof consensus.explanation === "string"
+
         ){
 
+
             explanations =
+
                 consensus.explanation
+
                 .split("|")
+
                 .map(x=>x.trim())
+
                 .filter(Boolean);
 
+
         }
+
+
+
 
 
 
@@ -90,57 +130,98 @@ function DashboardContent(){
 
 
             ai_score:
+
                 backendIntel.ai_score ??
+
                 consensus.score ??
+
                 0,
 
 
+
             decision:
+
                 backendIntel.decision ??
+
                 consensus.decision ??
+
                 "HOLD",
 
 
+
             confidence:
+
                 backendIntel.confidence ??
+
                 50,
 
 
+
             ml_score:
-                backendIntel.ml_score ?? 0,
+
+                backendIntel.ml_score ??
+
+                0,
+
 
 
             technical_score:
-                backendIntel.technical_score ?? 0,
+
+                backendIntel.technical_score ??
+
+                0,
+
 
 
             news_score:
-                backendIntel.news_score ?? 0,
+
+                backendIntel.news_score ??
+
+                0,
+
 
 
             research_score:
-                backendIntel.research_score ?? 0,
+
+                backendIntel.research_score ??
+
+                0,
+
 
 
             kap_score:
-                backendIntel.kap_score ?? 0,
+
+                backendIntel.kap_score ??
+
+                0,
+
 
 
             strengths:
+
                 backendIntel.strengths ??
+
                 consensus.strengths ??
+
                 [],
+
 
 
             weaknesses:
+
                 backendIntel.weaknesses ??
+
                 consensus.risks ??
+
                 [],
+
 
 
             explanations,
 
+
         };
+
 
 
     },[data]);
@@ -150,8 +231,8 @@ function DashboardContent(){
 
 
 
-
     if(error){
+
 
         return (
 
@@ -163,14 +244,9 @@ function DashboardContent(){
 
         );
 
+
     }
-
-
-
-
-
-
-    return (
+        return (
 
         <Box sx={{p:3}}>
 
@@ -185,7 +261,7 @@ function DashboardContent(){
 
             >
 
-                🤖 BIST AI LAB v10
+                🤖 BIST AI LAB v10.3.4
 
             </Typography>
 
@@ -205,13 +281,13 @@ function DashboardContent(){
 
 
 
-
-
-                {/* WATCHLIST */}
+                {/* PORTFOLIO */}
 
                 <Grid size={{xs:12,lg:2}}>
 
+
                     <PortfolioPanel/>
+
 
                 </Grid>
 
@@ -221,10 +297,29 @@ function DashboardContent(){
 
 
 
+                {/* AI DECISION */}
 
-                {/* AI */}
+                <Grid size={{xs:12,lg:3}}>
 
-                <Grid size={{xs:12,lg:4}}>
+
+                    <AIExplanationCard
+
+                        intelligence={intelligence}
+
+                    />
+
+
+                </Grid>
+
+
+
+
+
+
+
+                {/* AI SCORE */}
+
+                <Grid size={{xs:12,lg:2}}>
 
 
                     <AIScoreCard
@@ -244,39 +339,20 @@ function DashboardContent(){
 
 
 
+                {/* TECHNICAL */}
 
-                {/* NEWS */}
-
-                <Grid size={{xs:12,lg:6}}>
-
-
-                    <Box
-
-                        sx={{
-
-                            height:300,
-
-                            overflow:"auto"
-
-                        }}
-
-                    >
-
-                        <NewsPanel
-
-                            news={
-
-                                data?.news?.news ?? []
-
-                            }
+                <Grid size={{xs:12,lg:3}}>
 
 
-                            loading={loading}
+                    <TechnicalCard
 
-                        />
+                        technical={
 
+                            data?.technical ?? {}
 
-                    </Box>
+                        }
+
+                    />
 
 
                 </Grid>
@@ -287,8 +363,45 @@ function DashboardContent(){
 
 
 
+                {/* NEWS */}
 
-                {/* KPI */}
+                <Grid size={{xs:12,lg:2}}>
+
+
+                    <Box
+
+                        sx={{
+
+                            height:420,
+
+                            overflow:"auto"
+
+                        }}
+
+                    >
+
+
+                        <NewsPanel
+
+
+                            news={
+
+                                data?.news?.news ?? []
+
+                            }
+
+
+                            loading={loading}
+
+
+                        />
+
+
+                    </Box>
+
+
+                </Grid>
+                                {/* KPI */}
 
                 <Grid size={{xs:12,lg:3}}>
 
@@ -348,7 +461,7 @@ function DashboardContent(){
 
                             title="KAP"
 
-                            subtitle="KAP"
+                            subtitle="Kamuyu Aydınlatma"
 
                             value={intelligence.kap_score}
 
@@ -367,32 +480,21 @@ function DashboardContent(){
 
 
 
+
                 {/* RADAR */}
 
                 <Grid size={{xs:12,lg:4}}>
 
 
-                    <Box
+                    <RadarChart
 
-                        sx={{
+                        intelligence={intelligence}
 
-                            height:320
-
-                        }}
-
-                    >
-
-                        <RadarChart
-
-                            intelligence={intelligence}
-
-                        />
-
-
-                    </Box>
+                    />
 
 
                 </Grid>
+
 
 
 
@@ -410,13 +512,14 @@ function DashboardContent(){
 
                         sx={{
 
-                            height:320,
+                            height:350,
 
                             overflow:"auto"
 
                         }}
 
                     >
+
 
                         <ResearchPanel
 
@@ -426,7 +529,9 @@ function DashboardContent(){
 
                             }
 
+
                             loading={loading}
+
 
                         />
 
@@ -444,37 +549,34 @@ function DashboardContent(){
 
 
 
-                {/* CHART */}
+                {/* MAIN CHART */}
 
-                <Grid size={{xs:12,lg:8}}>
+                <Grid size={{xs:12,lg:9}}>
 
 
                     <TradingChart
 
+
                         symbol={selectedSymbol}
+
 
                         market={data?.market}
 
+
                         prediction={data?.prediction}
+
 
                     />
 
 
                 </Grid>
+                                {/* KAP */}
 
-
-
-
-
-
-
-
-                {/* KAP */}
-
-                <Grid size={{xs:12,lg:4}}>
+                <Grid size={{xs:12,lg:3}}>
 
 
                     <KapPanel
+
 
                         events={
 
@@ -482,12 +584,15 @@ function DashboardContent(){
 
                         }
 
+
                         loading={loading}
+
 
                     />
 
 
                 </Grid>
+
 
 
 
@@ -502,21 +607,28 @@ function DashboardContent(){
 
 
 
+
             <Box mt={2}>
 
 
                 <StatusBar
 
+
                     loadedAt={data?.loadedAt}
+
 
                     version={data?.version?.version}
 
+
                     modules={data?.modules}
+
 
                 />
 
 
             </Box>
+
+
 
 
 
@@ -536,16 +648,23 @@ function DashboardContent(){
 
 
 
+
+
 export default function DashboardPage(){
+
 
 
     return (
 
+
         <DashboardProvider>
+
 
             <DashboardContent/>
 
+
         </DashboardProvider>
+
 
     );
 

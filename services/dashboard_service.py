@@ -468,10 +468,13 @@ class DashboardService:
 
 
 
-            "technical":
-
-                65,
-
+           "technical":
+            float(
+                technical.get(
+                    "score",
+                    50
+                )
+            ),
 
 
             "news":

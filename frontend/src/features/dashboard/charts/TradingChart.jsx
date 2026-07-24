@@ -52,6 +52,10 @@ export default function TradingChart({
 
 
 
+    const signal = prediction?.signal ?? "HOLD";
+
+
+
     const chartData = useMemo(() => {
 
 
@@ -65,78 +69,106 @@ export default function TradingChart({
 
                 volumes: [],
 
+                signalPoints: [],
+
             };
 
         }
 
 
 
+        const dates = ohlcv.map(
+
+            item => item.date.substring(0,10)
+
+        );
+
+
+
+        const candles = ohlcv.map(
+
+            item => [
+
+                item.open,
+
+                item.close,
+
+                item.low,
+
+                item.high,
+
+            ]
+
+        );
+
+
+
+        const volumes = ohlcv.map(
+
+            item => item.volume
+
+        );
+
+
+
+        const last = ohlcv[ohlcv.length - 1];
+
+
+
+        const signalPoints = [
+
+            {
+
+                value: [
+
+                    dates[dates.length - 1],
+
+                    last.close
+
+                ],
+
+
+                signal,
+
+            }
+
+        ];
+
+
+
         return {
 
+            dates,
 
-            dates:
+            candles,
 
-                ohlcv.map(
+            volumes,
 
-                    item =>
-
-                    item.date.substring(0,10)
-
-                ),
-
-
-
-            candles:
-
-                ohlcv.map(
-
-                    item => [
-
-                        item.open,
-
-                        item.close,
-
-                        item.low,
-
-                        item.high,
-
-                    ]
-
-                ),
-
-
-
-
-            volumes:
-
-                ohlcv.map(
-
-                    item =>
-
-                    item.volume
-
-                ),
-
-
+            signalPoints,
 
         };
 
 
 
-    }, [ohlcv]);
+    }, [ohlcv, signal]);
 
 
 
 
 
 
-    const signalPrice =
 
-        prediction?.current_price ??
+    const signalColor =
 
-        prediction?.price ??
+        signal === "BUY"
 
-        market?.price;
+            ? "#26a69a"
+
+            : signal === "SELL"
+
+                ? "#ef5350"
+
+                : "#ffc107";
 
 
 
@@ -160,7 +192,7 @@ export default function TradingChart({
 
             text:
 
-                `${symbol} REAL MARKET DATA`,
+                `${symbol} AI MARKET INTELLIGENCE`,
 
 
 
@@ -230,47 +262,28 @@ export default function TradingChart({
 
             {
 
-                left:
+                left:55,
 
-                    55,
+                right:25,
 
-                right:
+                top:60,
 
-                    25,
-
-                top:
-
-                    60,
-
-                height:
-
-                    "60%",
-
+                height:"60%",
 
             },
 
 
             {
 
-                left:
+                left:55,
 
-                    55,
+                right:25,
 
-                right:
+                top:"75%",
 
-                    25,
+                height:"15%",
 
-                top:
-
-                    "75%",
-
-
-                height:
-
-                    "15%",
-
-
-            },
+            }
 
         ],
 
@@ -280,77 +293,31 @@ export default function TradingChart({
 
 
 
-        xAxis: [
+        xAxis:[
+
 
             {
 
+                type:"category",
 
-                type:
+                data:chartData.dates,
 
-                    "category",
-
-
-
-                data:
-
-                    chartData.dates,
-
-
-
-                boundaryGap:
-
-                    true,
-
-
-
-                axisLine: {
-
-
-                    lineStyle: {
-
-
-                        color:
-
-                            "#888",
-
-
-                    },
-
-
-                },
-
-
+                boundaryGap:true,
 
             },
 
 
             {
 
+                type:"category",
 
-                type:
+                gridIndex:1,
 
-                    "category",
+                data:chartData.dates,
 
+                show:false,
 
-
-                gridIndex:
-
-                    1,
-
-
-
-                data:
-
-                    chartData.dates,
-
-
-
-                show:
-
-                    false,
-
-
-            },
+            }
 
 
         ],
@@ -361,75 +328,37 @@ export default function TradingChart({
 
 
 
-        yAxis: [
-
-            {
-
-
-                scale:
-
-                    true,
-
-
-
-                splitLine: {
-
-
-                    lineStyle: {
-
-
-                        color:
-
-                            "#2b3440",
-
-
-                    },
-
-
-                },
-
-
-
-                axisLine: {
-
-
-                    lineStyle: {
-
-
-                        color:
-
-                            "#888",
-
-
-                    },
-
-
-                },
-
-
-            },
-
+        yAxis:[
 
 
             {
 
+                scale:true,
 
-                gridIndex:
+                splitLine:{
 
-                    1,
+                    lineStyle:{
 
+                        color:"#2b3440"
 
+                    }
 
-                splitLine:
-
-                    {
-
-                        show:false
-
-                    },
-
+                }
 
             },
+
+
+            {
+
+                gridIndex:1,
+
+                splitLine:{
+
+                    show:false
+
+                }
+
+            }
 
 
         ],
@@ -440,62 +369,42 @@ export default function TradingChart({
 
 
 
-        series: [
+        series:[
 
 
 
             {
 
-
-                name:
-
-                    symbol,
+                name:symbol,
 
 
-
-                type:
-
-                    "candlestick",
+                type:"candlestick",
 
 
-
-                data:
-
-                    chartData.candles,
+                data:chartData.candles,
 
 
-
-                itemStyle: {
-
-
-                    color:
-
-                        "#26a69a",
+                itemStyle:{
 
 
-
-                    color0:
-
-                        "#ef5350",
+                    color:"#26a69a",
 
 
-                    borderColor:
-
-                        "#26a69a",
+                    color0:"#ef5350",
 
 
+                    borderColor:"#26a69a",
 
-                    borderColor0:
 
-                        "#ef5350",
-
+                    borderColor0:"#ef5350",
 
 
                 },
 
 
-
             },
+
+
 
 
 
@@ -503,35 +412,19 @@ export default function TradingChart({
 
             {
 
-
-                name:
-
-                    "Volume",
+                name:"Volume",
 
 
-
-                type:
-
-                    "bar",
+                type:"bar",
 
 
-
-                xAxisIndex:
-
-                    1,
+                xAxisIndex:1,
 
 
-
-                yAxisIndex:
-
-                    1,
+                yAxisIndex:1,
 
 
-
-                data:
-
-                    chartData.volumes,
-
+                data:chartData.volumes,
 
 
             },
@@ -540,65 +433,115 @@ export default function TradingChart({
 
 
 
+
+
+
             {
 
-
-                name:
-
-                    "AI SIGNAL",
+                name:"AI SIGNAL LINE",
 
 
-
-                type:
-
-                    "line",
-
+                type:"line",
 
 
                 data:
+
 
                     chartData.dates.map(
 
-                        () => signalPrice
+                        () =>
+
+                        prediction?.current_price ??
+
+                        prediction?.price ??
+
+                        market?.price
+
+                    ),
+
+
+                symbol:"none",
+
+
+                lineStyle:{
+
+
+                    type:"dashed",
+
+
+                    width:2,
+
+
+                    color:signalColor,
+
+
+                },
+
+
+            },
+
+
+
+
+
+
+
+
+            {
+
+                name:`AI ${signal}`,
+
+
+                type:"scatter",
+
+
+                data:
+
+
+                    chartData.signalPoints.map(
+
+                        item => item.value
 
                     ),
 
 
 
-                smooth:
-
-                    true,
+                symbolSize:18,
 
 
-
-                symbol:
-
-                    "none",
+                itemStyle:{
 
 
-
-                lineStyle:
-
-
-                    {
+                    color:signalColor,
 
 
-                        width:
-
-                            2,
+                },
 
 
 
-                        type:
-
-                            "dashed",
+                label:{
 
 
-                    },
+                    show:true,
 
 
+                    formatter:
 
-            },
+                        `AI ${signal}`,
+
+
+                    position:"top",
+
+
+                    color:"#ffffff",
+
+
+                },
+
+
+            }
+
+
 
 
 
@@ -614,33 +557,24 @@ export default function TradingChart({
 
 
 
-
     return (
-
 
 
         <Paper
 
             sx={{
 
-
                 p:2,
-
 
                 borderRadius:3,
 
-
                 background:"#10151d",
-
 
                 border:"1px solid #243041",
 
-
             }}
 
-
         >
-
 
 
             <Suspense
@@ -650,39 +584,23 @@ export default function TradingChart({
             >
 
 
-
                 <EChart
-
 
                     option={option}
 
 
-
                     style={{
 
+                        width:"100%",
 
-                        width:
-
-                            "100%",
-
-
-
-                        height:
-
-                            520,
-
-
+                        height:520,
 
                     }}
-
-
 
                 />
 
 
-
             </Suspense>
-
 
 
         </Paper>
