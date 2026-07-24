@@ -24,8 +24,9 @@ from .top_picks import router as top_picks_router
 
 from .portfolio import router as portfolio_router
 
+from .decision_timeline import router as decision_timeline_router
 
-
+from .ai_memory import router as ai_memory_router
 
 
 __all__ = [
@@ -45,5 +46,9 @@ __all__ = [
     "market_router",
 
     "portfolio_router",
+
+    "decision_timeline_router",
+
+    "ai_memory_router",
 
 ]

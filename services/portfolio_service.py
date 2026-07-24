@@ -1,6 +1,6 @@
 """
 BIST AI LAB
-Portfolio Intelligence Service v1.3
+Portfolio Intelligence Service v1.7
 """
 
 from datetime import datetime
@@ -21,6 +21,26 @@ from services.portfolio_risk_service import (
 
 from services.portfolio_optimizer_service import (
     portfolio_optimizer_service,
+)
+
+
+from services.portfolio_advisor_service import (
+    portfolio_advisor_service,
+)
+
+
+from services.portfolio_sector_service import (
+    portfolio_sector_service,
+)
+
+
+from services.portfolio_report_service import (
+    portfolio_report_service,
+)
+
+
+from services.portfolio_backtest_service import (
+    portfolio_backtest_service,
 )
 
 
@@ -97,8 +117,7 @@ class PortfolioService:
         total_cost = 0
 
         result = []
-
-
+        
 
 
 
@@ -115,7 +134,9 @@ class PortfolioService:
 
 
             market = self.normalize_market_data(
+
                 market
+
             )
 
 
@@ -223,6 +244,7 @@ class PortfolioService:
 
 
 
+
         if total_value > 0:
 
 
@@ -244,6 +266,7 @@ class PortfolioService:
                     2
 
                 )
+
 
 
 
@@ -285,9 +308,11 @@ class PortfolioService:
 
         portfolio_data = {
 
+
             "positions":
 
                 result
+
 
         }
 
@@ -310,6 +335,97 @@ class PortfolioService:
             portfolio_data
 
         )
+
+
+
+
+
+        advisor = portfolio_advisor_service.advise(
+
+            portfolio_data
+
+        )
+
+
+
+
+
+        sector_analysis = portfolio_sector_service.analyze(
+
+            portfolio_data
+
+        )
+        
+
+
+
+
+        backtest = portfolio_backtest_service.calculate(
+
+            {
+
+                "positions":
+
+                    result
+
+            }
+
+        )
+
+
+
+
+
+
+
+
+        report = portfolio_report_service.generate(
+
+            {
+
+                "portfolio_value":
+
+                    total_value,
+
+
+                "profit_loss":
+
+                    total_value-total_cost,
+
+
+                "portfolio_ai_score":
+
+                    portfolio_score,
+
+
+                "positions":
+
+                    result,
+
+
+                "risk":
+
+                    risk,
+
+
+                "optimization":
+
+                    optimization,
+
+
+                "advisor":
+
+                    advisor,
+
+
+                "sector_analysis":
+
+                    sector_analysis,
+
+            }
+
+        )
+
 
 
 
@@ -368,12 +484,36 @@ class PortfolioService:
 
 
 
+            "advisor":
+
+                advisor,
+
+
+
+            "sector_analysis":
+
+                sector_analysis,
+
+
+
+            "backtest":
+
+                backtest,
+
+
+
+            "report":
+
+                report,
+                
             "timestamp":
 
                 datetime.utcnow().isoformat()
 
 
         }
+
+
 
 
 

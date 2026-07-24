@@ -32,6 +32,7 @@ except Exception:
 
 
 
+
 # ============================================================
 # IMPORTS
 # ============================================================
@@ -40,6 +41,7 @@ except Exception:
 from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
+
 
 
 
@@ -59,10 +61,13 @@ from api import (
 
     market_router,
 
+    decision_timeline_router,
+
+    ai_memory_router,
+
     portfolio_router,
 
 )
-
 
 
 
@@ -93,18 +98,13 @@ Modüller:
 - Top Picks Engine
 - Real Market Data Engine
 - Portfolio Intelligence Engine
+- AI Memory Engine
 
 """,
 
     version="10.4.0",
 
 )
-
-
-
-
-
-
 
 # ============================================================
 # CORS
@@ -149,6 +149,7 @@ app.add_middleware(
     ],
 
 )
+
 
 
 
@@ -209,6 +210,22 @@ app.include_router(
 
 
 
+app.include_router(
+
+    decision_timeline_router
+
+)
+
+
+
+app.include_router(
+
+    ai_memory_router
+
+)
+
+
+
 # REAL MARKET DATA
 
 app.include_router(
@@ -216,8 +233,6 @@ app.include_router(
     market_router
 
 )
-
-
 
 
 
@@ -229,13 +244,6 @@ app.include_router(
 
 )
 
-
-
-
-
-
-
-
 # ============================================================
 # ROOT
 # ============================================================
@@ -245,25 +253,29 @@ app.include_router(
 
 def root():
 
+
     return {
 
 
         "name":
 
-        "BIST AI LAB",
+            "BIST AI LAB",
+
 
 
         "version":
 
-        "10.4.0",
+            "10.4.0",
+
 
 
         "status":
 
-        "running"
+            "running"
 
 
     }
+
 
 
 
@@ -286,15 +298,17 @@ def health():
 
         "status":
 
-        "ok",
+            "ok",
+
 
 
         "service":
 
-        "BIST AI LAB API"
+            "BIST AI LAB API"
 
 
     }
+
 
 
 
@@ -330,6 +344,8 @@ async def startup_event():
  ✓ Top Picks Engine
  ✓ Market Data API
  ✓ Portfolio Intelligence
+ ✓ AI Decision Timeline
+ ✓ AI Memory Engine
 
 =====================================
 

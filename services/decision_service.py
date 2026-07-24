@@ -1,12 +1,11 @@
 from __future__ import annotations
+
 """
 services/decision_service.py
 
 BIST AI LAB
 AI Decision Engine v2.0
-
 """
-
 
 
 import logging
@@ -18,12 +17,38 @@ from datetime import datetime
 from typing import List, Dict
 
 
+
 from services.consensus_service import (
+
     calculate_consensus,
+
 )
 
 
+
+from services.ai_decision_timeline_service import (
+
+    ai_decision_timeline_service,
+
+)
+
+
+
+from services.ai_memory_service import (
+
+    ai_memory_service,
+
+)
+
+
+
+
+
 logger = logging.getLogger(__name__)
+
+
+
+
 
 
 
@@ -34,6 +59,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(slots=True)
 class DecisionResult:
+
 
     symbol: str
 
@@ -53,6 +79,10 @@ class DecisionResult:
 
 
 
+
+
+
+
 # ============================================================
 # DECISION ENGINE
 # ============================================================
@@ -64,54 +94,77 @@ class DecisionService:
 
     def evaluate(
 
+
         self,
+
 
         symbol: str,
 
+
         components: Dict[str, float],
+
 
     ):
 
 
+
         consensus = calculate_consensus(
+
 
             symbol,
 
+
             components
 
+
         )
+
 
 
         score = consensus.get(
 
+
             "score",
+
 
             50
 
+
         )
+
 
 
         decision = consensus.get(
 
+
             "decision",
+
 
             "HOLD"
 
+
         )
+
 
 
         confidence = consensus.get(
 
+
             "confidence",
 
+
             "LOW"
+
 
         )
 
 
+
         risk = self.calculate_risk(
 
+
             components
+
 
         )
 
@@ -126,25 +179,105 @@ class DecisionService:
 
 
 
-        return DecisionResult(
+
+
+
+        # ====================================================
+        # AI DECISION TIMELINE
+        # ====================================================
+
+
+        ai_decision_timeline_service.add_decision(
+
 
             symbol=symbol,
 
+
             decision=decision,
+
 
             score=score,
 
+
             confidence=confidence,
+
+
+            explanation=reasons
+
+
+        )
+
+
+
+
+
+
+
+        # ====================================================
+        # AI MEMORY STORAGE
+        # ====================================================
+
+
+        ai_memory_service.store_decision(
+
+
+            {
+
+
+                "symbol": symbol,
+
+
+                "decision": decision,
+
+
+                "score": score,
+
+
+                "confidence": confidence
+
+
+            }
+
+
+        )
+
+
+
+
+
+
+
+        return DecisionResult(
+
+
+            symbol=symbol,
+
+
+            decision=decision,
+
+
+            score=score,
+
+
+            confidence=confidence,
+
 
             risk=risk,
 
+
             reasons=reasons,
+
 
             components=components,
 
+
             timestamp=datetime.utcnow().isoformat(),
 
+
         )
+
+
+
 
 
 
@@ -155,39 +288,59 @@ class DecisionService:
 
     def calculate_risk(
 
+
         self,
 
+
         components: Dict[str, float],
+
 
     ):
 
 
+
         weak = len(
+
 
             [
 
+
                 value
+
 
                 for value in components.values()
 
+
                 if value < 40
 
+
             ]
+
 
         )
 
 
+
         if weak >= 3:
+
 
             return "HIGH"
 
 
+
         if weak >= 1:
+
 
             return "MEDIUM"
 
 
+
         return "LOW"
+
+
+
+
+
 
 
 
@@ -198,22 +351,30 @@ class DecisionService:
 
     def generate_reasons(
 
+
         self,
+
 
         components: Dict[str, float],
 
+
         decision: str,
 
+
     ):
+
 
 
         reasons = []
 
 
+
         for key, value in components.items():
 
 
+
             if value >= 70:
+
 
                 reasons.append(
 
@@ -222,7 +383,9 @@ class DecisionService:
                 )
 
 
+
             elif value <= 40:
+
 
                 reasons.append(
 
@@ -231,7 +394,9 @@ class DecisionService:
                 )
 
 
+
             else:
+
 
                 reasons.append(
 
@@ -241,14 +406,22 @@ class DecisionService:
 
 
 
+
+
         reasons.append(
 
+
             f"Final decision: {decision}"
+
 
         )
 
 
+
         return reasons
+    
+
+
 
 
 
@@ -261,6 +434,10 @@ decision_service = DecisionService()
 
 
 
+
+
+
+
 # ============================================================
 # PUBLIC API
 # ============================================================
@@ -268,31 +445,47 @@ decision_service = DecisionService()
 
 def make_decision(
 
+
     symbol: str,
 
+
     components: Dict[str, float],
+
 
 ):
 
 
+
     result = decision_service.evaluate(
+
 
         symbol,
 
+
         components
 
+
     )
+
 
 
     return asdict(
 
+
         result
+
 
     )
 
 
 
+
+
+
+
+
 def decision_health():
+
 
 
     return {
@@ -300,27 +493,43 @@ def decision_health():
 
         "service":
 
-        "AI Decision Engine",
+
+            "AI Decision Engine",
+
 
 
         "status":
 
-        "ok",
+
+            "ok",
+
 
     }
 
 
 
+
+
+
+
+
+
 __all__ = [
+
 
     "DecisionResult",
 
+
     "DecisionService",
+
 
     "decision_service",
 
+
     "make_decision",
 
+
     "decision_health",
+
 
 ]

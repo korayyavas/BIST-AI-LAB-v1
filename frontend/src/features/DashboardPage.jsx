@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-
+import PortfolioPerformanceChart from "./dashboard/charts/PortfolioPerformanceChart";
 import {
     Alert,
     Box,
@@ -33,7 +33,7 @@ import PortfolioPanel from "./dashboard/panels/PortfolioPanel";
 import NewsPanel from "./dashboard/panels/NewsPanel";
 import ResearchPanel from "./dashboard/panels/ResearchPanel";
 import KapPanel from "./dashboard/panels/KapPanel";
-
+import AIScoreHistoryChart from "./dashboard/charts/AIScoreHistoryChart";
 
 import StatusBar from "./dashboard/widgets/StatusBar";
 
@@ -491,6 +491,19 @@ function DashboardContent(){
                         intelligence={intelligence}
 
                     />
+                    {/* AI SCORE HISTORY */}
+
+                    <Grid size={{xs:12,lg:4}}>
+
+
+                        <AIScoreHistoryChart
+
+                            intelligence={intelligence}
+
+                        />
+
+
+                    </Grid>
 
 
                 </Grid>
@@ -552,6 +565,30 @@ function DashboardContent(){
                 {/* MAIN CHART */}
 
                 <Grid size={{xs:12,lg:9}}>
+
+                    {/* PORTFOLIO PERFORMANCE */}
+
+                    <Grid size={{xs:12,lg:8}}>
+
+
+                        <PortfolioPerformanceChart
+
+                            backtest={
+
+                                data?.portfolio?.backtest ??
+
+                                data?.backtest ??
+
+                                {}
+
+                            }
+
+                        />
+
+
+                    </Grid>
+
+
 
 
                     <TradingChart

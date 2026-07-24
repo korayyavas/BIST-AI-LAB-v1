@@ -80,7 +80,6 @@ export default function PortfolioPanel(){
 
 
 
-
     if(loading){
 
 
@@ -113,6 +112,7 @@ export default function PortfolioPanel(){
 
 
 
+
     if(!portfolio){
 
         return null;
@@ -132,6 +132,41 @@ export default function PortfolioPanel(){
 
 
 
+    const optimization =
+
+        portfolio.optimization ?? {};
+
+
+
+
+    const advisor =
+
+        portfolio.advisor ?? {};
+
+
+
+
+    const sector =
+
+        portfolio.sector_analysis ?? {};
+
+
+
+
+    const report =
+
+        portfolio.report ?? {};
+
+
+
+
+    const backtest =
+
+        portfolio.backtest ?? {};
+
+
+
+
 
 
     const riskColor =
@@ -139,13 +174,17 @@ export default function PortfolioPanel(){
 
         risk.risk_level === "HIGH"
 
-        ? "error"
+        ?
+
+        "error"
 
         :
 
         risk.risk_level === "MEDIUM"
 
-        ? "warning"
+        ?
+
+        "warning"
 
         :
 
@@ -157,10 +196,32 @@ export default function PortfolioPanel(){
 
 
 
+    const actionColor = (action)=>{
+
+
+        if(action === "REDUCE")
+
+            return "error";
+
+
+        if(action === "INCREASE")
+
+            return "success";
+
+
+        return "warning";
+
+
+    };
+
+
+
+
+
+
+
     return (
-
-
-        <Paper
+                <Paper
 
             sx={{
 
@@ -175,6 +236,7 @@ export default function PortfolioPanel(){
             }}
 
         >
+
 
 
 
@@ -213,6 +275,7 @@ export default function PortfolioPanel(){
                     </Typography>
 
 
+
                     <Typography
 
                         variant="h5"
@@ -233,6 +296,7 @@ export default function PortfolioPanel(){
 
 
 
+
                 <Box>
 
 
@@ -241,6 +305,7 @@ export default function PortfolioPanel(){
                         Profit / Loss
 
                     </Typography>
+
 
 
                     <Typography
@@ -300,7 +365,6 @@ export default function PortfolioPanel(){
 
 
 
-
                 <Divider />
 
 
@@ -324,9 +388,10 @@ export default function PortfolioPanel(){
 
 
 
+
                 {
 
-                    portfolio.positions?.map(item=>(
+                    portfolio.positions?.map(item => (
 
 
                         <Box
@@ -344,6 +409,7 @@ export default function PortfolioPanel(){
                             }}
 
                         >
+
 
 
                             <Typography
@@ -396,7 +462,6 @@ export default function PortfolioPanel(){
 
 
 
-
                 {
 
                     risk.warnings?.length > 0 &&
@@ -413,9 +478,11 @@ export default function PortfolioPanel(){
 
                         >
 
-                            Risk Warnings
+                            ⚠️ Risk Warnings
 
                         </Typography>
+
+
 
 
 
@@ -446,10 +513,771 @@ export default function PortfolioPanel(){
                         }
 
 
+
                     </Box>
 
 
                 }
+                
+
+
+
+
+
+
+                {
+
+                    optimization.optimization?.length > 0 &&
+
+
+                    <Box>
+
+
+                        <Divider sx={{my:1}} />
+
+
+
+                        <Typography
+
+                            color="primary.main"
+
+                            fontWeight={700}
+
+                        >
+
+                            🤖 AI Optimization
+
+                        </Typography>
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            sx={{mb:1}}
+
+                        >
+
+                            {optimization.summary}
+
+                        </Typography>
+
+
+
+
+
+
+                        {
+
+                            optimization.optimization.map(
+
+                                (item,index)=>(
+
+
+                                    <Box
+
+                                        key={index}
+
+                                        sx={{
+
+                                            borderTop:
+
+                                            "1px solid #243041",
+
+                                            pt:1,
+
+                                            mt:1
+
+                                        }}
+
+                                    >
+
+
+
+                                        <Chip
+
+                                            size="small"
+
+                                            color={
+
+                                                actionColor(
+
+                                                    item.action
+
+                                                )
+
+                                            }
+
+                                            label={item.action}
+
+                                        />
+
+
+
+
+                                        <Typography
+
+                                            fontWeight={700}
+
+                                            mt={0.5}
+
+                                        >
+
+                                            {item.symbol}
+
+                                        </Typography>
+
+
+
+
+                                        <Typography
+
+                                            variant="body2"
+
+                                        >
+
+                                            {item.reason}
+
+                                        </Typography>
+
+
+
+
+                                    </Box>
+
+
+                                )
+
+                            )
+
+                        }
+
+
+
+                    </Box>
+
+
+                }
+
+
+
+
+
+
+
+
+
+                {
+
+                    advisor.target_allocation?.length > 0 &&
+
+
+                    <Box>
+
+
+                        <Divider sx={{my:1}} />
+
+
+
+
+                        <Typography
+
+                            color="secondary.main"
+
+                            fontWeight={700}
+
+                        >
+
+                            🧠 AI Advisor
+
+                        </Typography>
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            sx={{mt:1}}
+
+                        >
+
+                            {advisor.summary}
+
+                        </Typography>
+
+
+
+
+
+                        <Chip
+
+                            sx={{mt:1}}
+
+                            label={
+
+                                advisor.rebalance_required
+
+                                ?
+
+                                "REBALANCE REQUIRED"
+
+                                :
+
+                                "PORTFOLIO BALANCED"
+
+                            }
+
+
+                            color={
+
+                                advisor.rebalance_required
+
+                                ?
+
+                                "error"
+
+                                :
+
+                                "success"
+
+                            }
+
+                        />
+
+
+
+
+
+
+
+                        {
+
+                            advisor.target_allocation.map(
+
+                                (item,index)=>(
+
+
+                                    <Box
+
+                                        key={index}
+
+                                        sx={{
+
+                                            borderTop:
+
+                                            "1px solid #243041",
+
+                                            pt:1,
+
+                                            mt:1
+
+                                        }}
+
+                                    >
+
+
+
+                                        <Typography
+
+                                            fontWeight={700}
+
+                                        >
+
+                                            {item.symbol}
+
+                                        </Typography>
+
+
+
+
+
+                                        <Typography
+
+                                            variant="body2"
+
+                                        >
+
+                                            Mevcut:
+
+                                            %
+
+                                            {item.current_weight}
+
+                                        </Typography>
+
+
+
+
+
+                                        <Typography
+
+                                            variant="body2"
+
+                                        >
+
+                                            Hedef:
+
+                                            %
+
+                                            {item.target_weight}
+
+                                        </Typography>
+
+
+
+
+
+                                        <Typography
+
+                                            variant="body2"
+
+                                            color={
+
+                                                item.difference < 0
+
+                                                ?
+
+                                                "error.main"
+
+                                                :
+
+                                                "success.main"
+
+                                            }
+
+                                        >
+
+                                            Fark:
+
+                                            {item.difference}
+
+                                        </Typography>
+
+
+
+                                    </Box>
+
+
+                                )
+
+                            )
+
+                        }
+
+
+
+                    </Box>
+
+
+                }
+                
+
+
+
+
+
+
+
+
+                {
+
+                    sector.sectors &&
+
+
+                    <Box>
+
+
+                        <Divider sx={{my:1}} />
+
+
+
+                        <Typography
+
+                            color="info.main"
+
+                            fontWeight={700}
+
+                        >
+
+                            📊 Sector Intelligence
+
+                        </Typography>
+
+
+
+
+
+
+                        <Chip
+
+                            sx={{mt:1}}
+
+                            label={
+
+                                `Sector Risk ${sector.sector_risk}`
+
+                            }
+
+                            color={
+
+                                sector.sector_risk === "HIGH"
+
+                                ?
+
+                                "error"
+
+                                :
+
+                                sector.sector_risk === "MEDIUM"
+
+                                ?
+
+                                "warning"
+
+                                :
+
+                                "success"
+
+                            }
+
+                        />
+
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            sx={{mt:1}}
+
+                        >
+
+                            {sector.summary}
+
+                        </Typography>
+
+
+
+
+
+
+
+                        {
+
+                            Object.entries(
+
+                                sector.sectors
+
+                            ).map(
+
+                                ([name,weight])=>(
+
+
+                                    <Box
+
+                                        key={name}
+
+                                        sx={{
+
+                                            borderTop:
+
+                                            "1px solid #243041",
+
+                                            pt:1,
+
+                                            mt:1
+
+                                        }}
+
+                                    >
+
+
+
+                                        <Typography
+
+                                            fontWeight={700}
+
+                                        >
+
+                                            {name}
+
+                                        </Typography>
+
+
+
+                                        <Typography
+
+                                            variant="body2"
+
+                                        >
+
+                                            Ağırlık:
+
+                                            %
+
+                                            {weight}
+
+                                        </Typography>
+
+
+
+                                    </Box>
+
+
+                                )
+
+                            )
+
+                        }
+
+
+
+                    </Box>
+
+
+                }
+
+
+
+
+
+
+
+
+
+                {
+
+                    report.title &&
+
+
+                    <Box>
+
+
+                        <Divider sx={{my:1}} />
+
+
+
+                        <Typography
+
+                            color="warning.main"
+
+                            fontWeight={700}
+
+                        >
+
+                            📄 AI Portfolio Report
+
+                        </Typography>
+
+
+
+
+
+
+                        <Typography
+
+                            variant="subtitle2"
+
+                            fontWeight={700}
+
+                            sx={{mt:1}}
+
+                        >
+
+                            {report.title}
+
+                        </Typography>
+
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            sx={{mt:1}}
+
+                        >
+
+                            {report.summary}
+
+                        </Typography>
+
+
+
+
+
+
+
+                        <Chip
+
+                            sx={{mt:1}}
+
+                            color="warning"
+
+                            label={
+
+                                report.recommendation
+
+                            }
+
+                        />
+
+
+
+                    </Box>
+
+
+                }
+
+
+
+
+
+
+
+
+
+                {
+
+                    backtest.initial_value &&
+
+
+                    <Box>
+
+
+                        <Divider sx={{my:1}} />
+
+
+
+                        <Typography
+
+                            color="success.main"
+
+                            fontWeight={700}
+
+                        >
+
+                            📈 Backtest Intelligence
+
+                        </Typography>
+
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            sx={{mt:1}}
+
+                        >
+
+                            Başlangıç Değeri:
+
+                            {" "}
+
+                            {backtest.initial_value}
+
+                        </Typography>
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                        >
+
+                            Güncel Değer:
+
+                            {" "}
+
+                            {backtest.current_value}
+
+                        </Typography>
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                            color="success.main"
+
+                        >
+
+                            Getiri:
+
+                            {" "}
+
+                            %{backtest.return_percent}
+
+                        </Typography>
+
+
+
+
+
+
+                        <Typography
+
+                            variant="body2"
+
+                        >
+
+                            Kâr/Zarar:
+
+                            {" "}
+
+                            {backtest.profit_loss}
+
+                        </Typography>
+
+
+
+
+
+
+
+                        <Chip
+
+                            sx={{mt:1}}
+
+                            color="success"
+
+                            label={
+
+                                `${backtest.benchmark?.name ?? "Benchmark"} karşılaştırması hazır`
+
+                            }
+
+                        />
+
+
+
+                    </Box>
+
+
+                }
+
 
 
 
