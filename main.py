@@ -1,9 +1,10 @@
 """
 BIST AI LAB
-Main Application v10.1
+Main Application v10.4
 """
 
 from __future__ import annotations
+
 
 
 # ============================================================
@@ -26,6 +27,7 @@ try:
 except Exception:
 
     pass
+
 
 
 
@@ -57,7 +59,11 @@ from api import (
 
     market_router,
 
+    portfolio_router,
+
 )
+
+
 
 
 
@@ -86,12 +92,15 @@ Modüller:
 - Consensus Decision Engine
 - Top Picks Engine
 - Real Market Data Engine
+- Portfolio Intelligence Engine
 
 """,
 
-    version="10.1.0",
+    version="10.4.0",
 
 )
+
+
 
 
 
@@ -140,6 +149,8 @@ app.add_middleware(
     ],
 
 )
+
+
 
 
 
@@ -210,6 +221,21 @@ app.include_router(
 
 
 
+# PORTFOLIO INTELLIGENCE
+
+app.include_router(
+
+    portfolio_router
+
+)
+
+
+
+
+
+
+
+
 # ============================================================
 # ROOT
 # ============================================================
@@ -229,7 +255,7 @@ def root():
 
         "version":
 
-        "10.1.0",
+        "10.4.0",
 
 
         "status":
@@ -238,6 +264,8 @@ def root():
 
 
     }
+
+
 
 
 
@@ -272,6 +300,8 @@ def health():
 
 
 
+
+
 # ============================================================
 # STARTUP
 # ============================================================
@@ -287,7 +317,7 @@ async def startup_event():
         """
 
 =====================================
- BIST AI LAB v10.1
+ BIST AI LAB v10.4
  API SERVER STARTED
 
  FEATURES:
@@ -299,6 +329,7 @@ async def startup_event():
  ✓ Decision Engine
  ✓ Top Picks Engine
  ✓ Market Data API
+ ✓ Portfolio Intelligence
 
 =====================================
 

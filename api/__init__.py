@@ -4,8 +4,10 @@ api/__init__.py
 BIST AI LAB
 FastAPI API Router Package
 
-v6.3
+v6.4
 """
+
+
 from .market import router as market_router
 
 from .dashboard import router as dashboard_router
@@ -19,6 +21,10 @@ from .research import router as research_router
 from .decision import router as decision_router
 
 from .top_picks import router as top_picks_router
+
+from .portfolio import router as portfolio_router
+
+
 
 
 
@@ -38,5 +44,6 @@ __all__ = [
 
     "market_router",
 
+    "portfolio_router",
 
 ]

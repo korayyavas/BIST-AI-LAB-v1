@@ -1,22 +1,18 @@
+import { useEffect, useState } from "react";
+
 import {
     Paper,
     Typography,
     Stack,
-    Chip,
     Box,
+    Chip,
     CircularProgress,
-    LinearProgress,
+    Divider,
 } from "@mui/material";
 
 
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import RemoveIcon from "@mui/icons-material/Remove";
+import apiClient from "../../../services/apiClient";
 
-
-import { useEffect, useState } from "react";
-
-import axios from "../../../api/api";
 
 
 
@@ -24,8 +20,7 @@ import axios from "../../../api/api";
 export default function PortfolioPanel(){
 
 
-
-    const [items,setItems] = useState([]);
+    const [portfolio,setPortfolio] = useState(null);
 
     const [loading,setLoading] = useState(true);
 
@@ -35,113 +30,49 @@ export default function PortfolioPanel(){
 
     useEffect(()=>{
 
-        load();
+
+        async function loadPortfolio(){
+
+
+            try{
+
+
+                const response = await apiClient.get(
+                    "/portfolio"
+                );
+
+
+                setPortfolio(
+                    response.data
+                );
+
+
+            }
+
+            catch(error){
+
+                console.error(
+                    "Portfolio error",
+                    error
+                );
+
+            }
+
+            finally{
+
+                setLoading(false);
+
+            }
+
+
+        }
+
+
+
+        loadPortfolio();
+
 
     },[]);
-
-
-
-
-
-
-    async function load(){
-
-
-        setLoading(true);
-
-
-        try{
-
-
-            const res = await axios.post(
-
-                "/top-picks",
-
-                {
-
-                    top:10,
-
-                    signal:"ALL",
-
-                    min_confidence:0,
-
-                }
-
-            );
-
-
-
-            setItems(
-
-                res.data.top_picks ??
-
-                res.data.items ??
-
-                []
-
-            );
-
-
-        }
-
-        catch(e){
-
-
-            console.error(
-
-                "Portfolio load error",
-
-                e
-
-            );
-
-
-            setItems([]);
-
-
-        }
-
-        finally{
-
-
-            setLoading(false);
-
-
-        }
-
-
-    }
-
-
-
-
-
-
-
-    function safeNumber(
-
-        value,
-
-        fallback=0
-
-    ){
-
-
-        const n = Number(value);
-
-
-        return Number.isFinite(n)
-
-            ?
-
-            n
-
-            :
-
-            fallback;
-
-
-    }
 
 
 
@@ -155,37 +86,70 @@ export default function PortfolioPanel(){
 
         return (
 
-
             <Paper
 
                 sx={{
 
-                    height:360,
+                    p:2,
 
-                    display:"flex",
+                    background:"#10151d",
 
-                    justifyContent:"center",
-
-                    alignItems:"center",
-
-                    bgcolor:"#10151d",
-
-                    borderRadius:4,
+                    borderRadius:3
 
                 }}
 
             >
 
-                <CircularProgress/>
-
+                <CircularProgress size={25}/>
 
             </Paper>
 
-
         );
 
+    }
+
+
+
+
+
+
+    if(!portfolio){
+
+        return null;
 
     }
+
+
+
+
+
+
+
+    const risk =
+
+        portfolio.risk ?? {};
+
+
+
+
+
+
+    const riskColor =
+
+
+        risk.risk_level === "HIGH"
+
+        ? "error"
+
+        :
+
+        risk.risk_level === "MEDIUM"
+
+        ? "warning"
+
+        :
+
+        "success";
 
 
 
@@ -196,33 +160,21 @@ export default function PortfolioPanel(){
     return (
 
 
-
         <Paper
-
 
             sx={{
 
+                p:2,
 
-                p:1.5,
+                borderRadius:3,
 
-                height:360,
+                background:"#10151d",
 
-                bgcolor:"#10151d",
-
-                border:"1px solid #243041",
-
-                borderRadius:4,
-
-                overflow:"hidden",
-
+                border:"1px solid #243041"
 
             }}
 
-
-
         >
-
-
 
 
 
@@ -232,14 +184,11 @@ export default function PortfolioPanel(){
 
                 fontWeight={700}
 
-                mb={1}
-
+                mb={2}
 
             >
 
-
-                📈 AI WATCHLIST
-
+                💼 Portfolio Intelligence
 
             </Typography>
 
@@ -248,353 +197,269 @@ export default function PortfolioPanel(){
 
 
 
-
-            <Box
-
-                sx={{
-
-                    height:"calc(100% - 40px)",
-
-                    overflow:"auto",
-
-                    pr:0.5,
-
-                }}
-
-            >
+            <Stack spacing={1.5}>
 
 
 
 
-                {
 
-                items.length===0 &&
+                <Box>
 
 
-                <Typography>
+                    <Typography variant="caption">
 
-                    Veri bulunamadı.
+                        Portfolio Value
+
+                    </Typography>
+
+
+                    <Typography
+
+                        variant="h5"
+
+                        fontWeight={700}
+
+                    >
+
+                        {portfolio.portfolio_value}
+
+                    </Typography>
+
+
+                </Box>
+
+
+
+
+
+
+                <Box>
+
+
+                    <Typography variant="caption">
+
+                        Profit / Loss
+
+                    </Typography>
+
+
+                    <Typography
+
+                        color="success.main"
+
+                        fontWeight={700}
+
+                    >
+
+                        +{portfolio.profit_loss}
+
+                    </Typography>
+
+
+                </Box>
+
+
+
+
+
+
+
+                <Chip
+
+                    label={
+
+                        `AI Portfolio Score ${portfolio.portfolio_ai_score}`
+
+                    }
+
+                    color="primary"
+
+                />
+
+
+
+
+
+
+
+                <Chip
+
+                    label={
+
+                        `Risk ${risk.risk_level} (${risk.risk_score})`
+
+                    }
+
+                    color={riskColor}
+
+                />
+
+
+
+
+
+
+
+
+                <Divider />
+
+
+
+
+
+
+
+                <Typography
+
+                    fontWeight={700}
+
+                >
+
+                    Positions
 
                 </Typography>
 
 
-                }
 
 
-
-
-
-
-                <Stack spacing={1}>
 
 
                 {
 
+                    portfolio.positions?.map(item=>(
 
-                items.map((item,index)=>{
 
+                        <Box
 
-
-                    const signal =
-
-                        item.signal ??
-
-                        "HOLD";
-
-
-
-
-                    const confidence =
-
-                        safeNumber(
-
-                            item.confidence ??
-
-                            item.confidence_score
-
-                        );
-
-
-
-
-                    const risk =
-
-                        safeNumber(
-
-                            item.risk_score
-
-                        );
-
-
-
-
-                    const score =
-
-                        safeNumber(
-
-                            item.top_score ??
-
-                            item.score
-
-                        );
-
-
-
-
-
-                    let color="warning";
-
-                    let icon=<RemoveIcon/>;
-
-
-
-
-
-                    if(signal.includes("BUY")){
-
-
-                        color="success";
-
-                        icon=<TrendingUpIcon/>;
-
-
-                    }
-
-
-
-
-
-                    if(signal.includes("SELL")){
-
-
-                        color="error";
-
-                        icon=<TrendingDownIcon/>;
-
-
-                    }
-
-
-
-
-
-
-
-                    return (
-
-
-
-                        <Paper
-
-
-                            key={item.symbol ?? index}
-
-
-                            variant="outlined"
-
+                            key={item.symbol}
 
                             sx={{
 
+                                borderTop:
 
-                                p:1,
+                                "1px solid #243041",
 
-                                bgcolor:"#161d28",
-
-                                borderRadius:2,
-
+                                pt:1
 
                             }}
-
-
 
                         >
 
 
-
-
-
-                            <Box
-
-                                display="flex"
-
-                                justifyContent="space-between"
-
-                                alignItems="center"
-
-                            >
-
-
-
-                                <Typography
-
-                                    fontWeight={700}
-
-                                    fontSize={14}
-
-                                >
-
-                                    {item.symbol}
-
-
-                                </Typography>
-
-
-
-
-                                <Chip
-
-
-                                    icon={icon}
-
-                                    color={color}
-
-                                    label={signal}
-
-                                    size="small"
-
-
-                                />
-
-
-
-                            </Box>
-
-
-
-
-
-
-
                             <Typography
 
-                                variant="caption"
+                                fontWeight={700}
 
                             >
 
-
-                                Confidence {confidence.toFixed(1)}%
-
+                                {item.symbol}
 
                             </Typography>
 
 
 
+                            <Typography variant="body2">
 
+                                Adet: {item.quantity}
 
-                            <LinearProgress
-
-
-                                variant="determinate"
-
-
-                                value={Math.min(
-
-                                    confidence,
-
-                                    100
-
-                                )}
-
-
-                                sx={{
-
-
-                                    mt:.3,
-
-                                    height:5,
-
-                                    borderRadius:5,
-
-
-                                }}
+                            </Typography>
 
 
 
-                            />
+                            <Typography variant="body2">
 
+                                Ağırlık: %{item.weight}
+
+                            </Typography>
+
+
+
+                            <Typography variant="body2">
+
+                                AI Score: {item.ai_score}
+
+                            </Typography>
+
+
+
+                        </Box>
+
+
+                    ))
+
+                }
 
 
 
 
 
 
-                            <Stack
-
-
-                                direction="row"
-
-                                spacing={.5}
-
-                                mt={.8}
-
-
-                            >
 
 
 
-                                <Chip
+                {
 
-                                    size="small"
-
-                                    label={
-
-                                        `Risk ${risk.toFixed(0)}`
-
-                                    }
-
-                                />
+                    risk.warnings?.length > 0 &&
 
 
+                    <Box>
 
 
-                                <Chip
+                        <Typography
 
-                                    size="small"
+                            color="error.main"
 
-                                    color="primary"
+                            fontWeight={700}
 
-                                    label={
+                        >
 
-                                        `AI ${score.toFixed(1)}`
+                            Risk Warnings
 
-                                    }
-
-                                />
-
-
-                            </Stack>
+                        </Typography>
 
 
 
+                        {
+
+                            risk.warnings.map(
+
+                                (warning,index)=>(
 
 
-                        </Paper>
+                                    <Typography
+
+                                        key={index}
+
+                                        variant="body2"
+
+                                    >
+
+                                        ⚠️ {warning}
+
+                                    </Typography>
 
 
-                    );
+                                )
+
+                            )
+
+                        }
 
 
-                })
+                    </Box>
 
 
                 }
 
 
 
-                </Stack>
 
 
-
-
-
-            </Box>
-
-
+            </Stack>
 
 
 
         </Paper>
-
 
 
     );
