@@ -453,6 +453,10 @@ function DashboardContent(){
 
                         symbol={selectedSymbol}
 
+                        market={data?.market}
+
+                        prediction={data?.prediction}
+
                     />
 
 

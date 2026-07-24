@@ -6,7 +6,7 @@ FastAPI API Router Package
 
 v6.3
 """
-
+from .market import router as market_router
 
 from .dashboard import router as dashboard_router
 
@@ -35,5 +35,8 @@ __all__ = [
     "decision_router",
 
     "top_picks_router",
+
+    "market_router",
+
 
 ]

@@ -1,6 +1,6 @@
 """
 BIST AI LAB
-Intelligence Dashboard Service v2.2
+Intelligence Dashboard Service v2.3
 """
 
 from datetime import datetime
@@ -27,6 +27,12 @@ from services.research_service import (
 from services.consensus_service import (
     calculate_consensus,
 )
+
+
+from services.providers.market_data_provider import (
+    market_data_provider,
+)
+
 
 
 logger = logging.getLogger(__name__)
@@ -84,6 +90,252 @@ class DashboardService:
 
 
 
+
+    # ========================================================
+    # MARKET DATA
+    # ========================================================
+
+
+    def build_market_data(
+        self,
+        symbol
+    ):
+
+
+        market = {
+
+
+            "symbol":
+
+                symbol,
+
+
+            "price":
+
+                None,
+
+
+            "change":
+
+                0,
+
+
+            "change_percent":
+
+                0,
+
+
+            "volume":
+
+                0,
+
+
+            "ohlcv":
+
+                []
+
+        }
+
+
+
+        try:
+
+
+            df = market_data_provider.get(
+
+                symbol
+
+            )
+
+
+
+            if df.empty:
+
+                return market
+
+
+
+            latest = df.iloc[-1]
+
+
+            previous = df.iloc[-2]
+
+
+
+            close = float(
+
+                latest["Close"]
+
+            )
+
+
+
+            prev_close = float(
+
+                previous["Close"]
+
+            )
+
+
+
+            change = close - prev_close
+
+
+
+            market.update({
+
+                "price":
+
+                    round(
+
+                        close,
+
+                        2
+
+                    ),
+
+
+                "change":
+
+                    round(
+
+                        change,
+
+                        2
+
+                    ),
+
+
+                "change_percent":
+
+                    round(
+
+                        (
+
+                            change /
+
+                            prev_close
+
+                        ) * 100,
+
+                        2
+
+                    )
+
+                    if prev_close
+
+                    else 0,
+
+
+                "volume":
+
+                    int(
+
+                        latest["Volume"]
+
+                    )
+
+            })
+
+
+
+
+            candles = []
+
+
+
+            for _, row in df.tail(250).iterrows():
+
+
+                candles.append({
+
+
+                    "date":
+
+                        str(
+
+                            row["Date"]
+
+                        ),
+
+
+
+                    "open":
+
+                        float(
+
+                            row["Open"]
+
+                        ),
+
+
+
+                    "high":
+
+                        float(
+
+                            row["High"]
+
+                        ),
+
+
+
+                    "low":
+
+                        float(
+
+                            row["Low"]
+
+                        ),
+
+
+
+                    "close":
+
+                        float(
+
+                            row["Close"]
+
+                        ),
+
+
+
+                    "volume":
+
+                        int(
+
+                            row["Volume"]
+
+                        )
+
+                })
+
+
+
+            market["ohlcv"] = candles
+
+
+
+        except Exception as e:
+
+
+            logger.exception(
+
+                "Market data error %s",
+
+                e
+
+            )
+
+
+
+        return market
+
+
+
+
+
+
     # ========================================================
     # BUILD DASHBOARD
     # ========================================================
@@ -100,8 +352,11 @@ class DashboardService:
 
 
         logger.info(
+
             "Building dashboard for %s",
+
             symbol
+
         )
 
 
@@ -112,23 +367,40 @@ class DashboardService:
 
 
         news = news_dashboard(
+
             symbol
+
         )
 
 
         kap = kap_dashboard(
+
             symbol
+
         )
 
 
         research = research_dashboard(
+
             symbol
+
         )
 
 
         technical = technical_service.analyze(
+
             symbol
+
         )
+
+
+
+        market = self.build_market_data(
+
+            symbol
+
+        )
+
 
 
 
@@ -138,29 +410,41 @@ class DashboardService:
 
 
         prediction = prediction_adapter.predict(
+
             symbol
+
         )
 
 
 
         ml_score = prediction.get(
+
             "top_score",
+
             50
+
         )
 
 
 
         confidence = prediction.get(
+
             "confidence",
+
             50
+
         )
 
 
 
         decision = prediction.get(
+
             "signal",
+
             "HOLD"
+
         )
+
 
 
 
@@ -174,51 +458,70 @@ class DashboardService:
 
             "ml":
 
-            float(
-                ml_score
-                or 50
-            ),
+                float(
+
+                    ml_score
+
+                    or 50
+
+                ),
 
 
 
             "technical":
 
-            65,
+                65,
 
 
 
             "news":
 
-            float(
-                self.extract_news_score(
-                    news
-                )
-                or 50
-            ),
+                float(
+
+                    self.extract_news_score(
+
+                        news
+
+                    )
+
+                    or 50
+
+                ),
 
 
 
             "research":
 
-            float(
-                self.extract_research_score(
-                    research
-                )
-                or 50
-            ),
+                float(
+
+                    self.extract_research_score(
+
+                        research
+
+                    )
+
+                    or 50
+
+                ),
 
 
 
             "kap":
 
-            float(
-                self.extract_kap_score(
-                    kap
-                )
-                or 50
-            ),
+                float(
+
+                    self.extract_kap_score(
+
+                        kap
+
+                    )
+
+                    or 50
+
+                ),
 
         }
+
 
 
 
@@ -242,14 +545,21 @@ class DashboardService:
             "score",
 
             sum(
+
                 components.values()
+
             )
+
             /
+
             len(
+
                 components
+
             )
 
         )
+
 
 
 
@@ -260,16 +570,21 @@ class DashboardService:
             or
 
             consensus.get(
+
                 "confidence",
+
                 50
+
             )
 
         )
 
 
 
+
+
         # ----------------------------------------------------
-        # INTELLIGENCE OBJECT
+        # INTELLIGENCE
         # ----------------------------------------------------
 
 
@@ -278,76 +593,83 @@ class DashboardService:
 
             "ai_score":
 
-            round(
-                ai_score,
-                2
-            ),
+                round(
+
+                    ai_score,
+
+                    2
+
+                ),
 
 
 
             "decision":
 
-            decision,
+                decision,
 
 
 
             "confidence":
 
-            round(
-                confidence,
-                2
-            ),
+                round(
+
+                    confidence,
+
+                    2
+
+                ),
 
 
 
             "ml_score":
 
-            components["ml"],
+                components["ml"],
 
 
 
             "technical_score":
 
-            components["technical"],
+                components["technical"],
 
 
 
             "news_score":
 
-            components["news"],
+                components["news"],
 
 
 
             "research_score":
 
-            components["research"],
+                components["research"],
 
 
 
             "kap_score":
 
-            components["kap"],
+                components["kap"],
 
 
 
             "strengths":
 
-            [],
+                [],
 
 
 
             "weaknesses":
 
-            [],
+                [],
 
 
 
             "explanations":
 
-            [],
-
+                [],
 
         }
+
+
 
 
 
@@ -362,116 +684,121 @@ class DashboardService:
 
             "symbol":
 
-            symbol,
+                symbol,
 
 
 
             "price":
 
-            technical.get(
-                "price"
-            ),
+                technical.get(
+
+                    "price"
+
+                ),
+
+
+
+            "market":
+
+                market,
 
 
 
             "trend":
 
-            technical.get(
-                "trend",
-                "UNKNOWN"
-            ),
+                technical.get(
+
+                    "trend",
+
+                    "UNKNOWN"
+
+                ),
 
 
 
             "news":
 
-            news,
+                news,
 
 
 
             "kap":
 
-            kap,
+                kap,
 
 
 
             "research":
 
-            research,
+                research,
 
 
 
             "technical":
 
-            technical,
+                technical,
 
 
 
             "prediction":
 
-            prediction,
+                prediction,
 
 
 
             "consensus":
 
-            consensus,
+                consensus,
 
 
 
             "intelligence":
 
-            intelligence,
+                intelligence,
 
 
 
             "version":
 
-            {
+                {
 
-                "version":
+                    "version":
 
-                "v10.0"
+                    "v10.1"
 
-            },
+                },
 
 
 
             "modules":
 
-            {
+                {
 
-                "ml":
+                    "ml": True,
 
-                True,
+                    "news": True,
 
-                "news":
+                    "kap": True,
 
-                True,
+                    "research": True,
 
-                "kap":
+                    "technical": True,
 
-                True,
+                    "market": True
 
-                "research":
-
-                True,
-
-                "technical":
-
-                True
-
-            },
+                },
 
 
 
             "loadedAt":
 
-            datetime.utcnow().isoformat(),
+                datetime.utcnow().isoformat(),
 
 
 
         }
+
+
 
 
 
@@ -507,13 +834,13 @@ def dashboard_health():
 
         "service":
 
-        "Dashboard Intelligence",
+            "Dashboard Intelligence",
 
 
 
         "status":
 
-        "ok"
+            "ok"
 
     }
 

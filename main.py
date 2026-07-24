@@ -1,6 +1,6 @@
 """
 BIST AI LAB
-Main Application v10.0
+Main Application v10.1
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ except Exception:
 
 
 
+
 # ============================================================
 # IMPORTS
 # ============================================================
@@ -37,6 +38,7 @@ except Exception:
 from fastapi import FastAPI
 
 from fastapi.middleware.cors import CORSMiddleware
+
 
 
 from api import (
@@ -52,6 +54,8 @@ from api import (
     decision_router,
 
     top_picks_router,
+
+    market_router,
 
 )
 
@@ -81,10 +85,11 @@ Modüller:
 - Research Engine
 - Consensus Decision Engine
 - Top Picks Engine
+- Real Market Data Engine
 
 """,
 
-    version="10.0.0",
+    version="10.1.0",
 
 )
 
@@ -152,11 +157,13 @@ app.include_router(
 )
 
 
+
 app.include_router(
 
     news_router
 
 )
+
 
 
 app.include_router(
@@ -166,11 +173,13 @@ app.include_router(
 )
 
 
+
 app.include_router(
 
     research_router
 
 )
+
 
 
 app.include_router(
@@ -180,9 +189,20 @@ app.include_router(
 )
 
 
+
 app.include_router(
 
     top_picks_router
+
+)
+
+
+
+# REAL MARKET DATA
+
+app.include_router(
+
+    market_router
 
 )
 
@@ -209,12 +229,13 @@ def root():
 
         "version":
 
-        "10.0.0",
+        "10.1.0",
 
 
         "status":
 
         "running"
+
 
     }
 
@@ -266,10 +287,19 @@ async def startup_event():
         """
 
 =====================================
- BIST AI LAB v10.0
+ BIST AI LAB v10.1
  API SERVER STARTED
- UTF-8 ENABLED
- TOP PICKS ENABLED
+
+ FEATURES:
+
+ ✓ Dashboard API
+ ✓ News Intelligence
+ ✓ KAP Analysis
+ ✓ Research Engine
+ ✓ Decision Engine
+ ✓ Top Picks Engine
+ ✓ Market Data API
+
 =====================================
 
         """
